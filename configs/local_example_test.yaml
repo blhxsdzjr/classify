@@ -4,14 +4,16 @@
 #   - test(1).zip
 #   - 结果统计.xlsx
 #
-# Important: the provided zip files contain images only. YOLO training still
-# needs matching labels under labels/train and labels/val.
+# Important: the primary training strategy is one-class lane detection:
+# train YOLO to find lane_line only, then classify white/yellow in
+# src.predict_yolo_lane with HSV post-processing.
+#
+# The provided zip files contain images only. YOLO training still needs
+# matching labels under labels/train and labels/val.
 path: datasets/local_colm
 train: images/train
 val: images/val
 test: images/test
 
 names:
-  0: white_lane
-  1: yellow_lane
-  2: road_surface
+  0: lane_line

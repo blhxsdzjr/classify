@@ -28,8 +28,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--class-mode",
         choices=("auto", "model", "hsv"),
-        default="auto",
-        help="auto uses model class if it is white/yellow, otherwise HSV color classification.",
+        default="hsv",
+        help="hsv is recommended for the one-class lane_line model; auto uses model class if it is white/yellow.",
     )
     parser.add_argument("--hsv-refine", action="store_true", help="Use HSV color result even for white/yellow model classes.")
     parser.add_argument("--keep-unknown", action="store_true", help="Keep detections whose color cannot be decided.")

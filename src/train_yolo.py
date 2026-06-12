@@ -5,7 +5,7 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Train a YOLO lane-line detector/segmenter.")
-    parser.add_argument("--data", default="configs/colm_lane.yaml", help="YOLO data yaml.")
+    parser.add_argument("--data", default="datasets/local_colm/data.yaml", help="YOLO data yaml.")
     parser.add_argument("--model", default="yolov8n-seg.pt", help="Pretrained YOLO model, e.g. yolov8n-seg.pt.")
     parser.add_argument("--epochs", type=int, default=120)
     parser.add_argument("--imgsz", type=int, default=960)
