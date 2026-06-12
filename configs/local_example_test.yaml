@@ -1,0 +1,17 @@
+# Generated/used by src.prepare_local_dataset for the files currently in this
+# project root:
+#   - 道路example.zip
+#   - test(1).zip
+#   - 结果统计.xlsx
+#
+# Important: the provided zip files contain images only. YOLO training still
+# needs matching labels under labels/train and labels/val.
+path: datasets/local_colm
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: white_lane
+  1: yellow_lane
+  2: road_surface

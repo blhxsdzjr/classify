@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+runs/
+datasets/
+*.pt
+*.onnx
+*.engine
+predictions*.json
+metrics*.json

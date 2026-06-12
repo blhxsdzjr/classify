@@ -1,0 +1,10 @@
+# Optional alternative when two-class YOLO mAP is low:
+# train YOLO as one class (lane_line), then classify color in post-processing
+# with src/predict_yolo_lane.py --class-mode hsv.
+path: datasets/colm_lane_line
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: lane_line
