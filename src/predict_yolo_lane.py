@@ -3,13 +3,14 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import time
 from pathlib import Path
 
 import numpy as np
 from tqdm import tqdm
 
 from .classes import EVAL_CLASSES, LANE_LINE, UNKNOWN, class_id_to_name, is_eval_class, normalize_class_name
-from .color_classifier import classify_lane_color
+from .color_classifier import adaptive_classify_lane_color, classify_lane_color
 from .geometry import LineInstance, fit_line_from_points, line_from_bbox_xyxy, points_from_mask
 
 
@@ -36,6 +37,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-vis", default=None, help="Optional directory for visualization images.")
     parser.add_argument("--counts-out", default=None, help="Optional CSV with filename/lane/white/yellow counts.")
     parser.add_argument("--max-det", type=int, default=300)
+    parser.add_argument("--roi-fraction", type=float, default=0.50,
+                        help="Only process the bottom fraction of the image (road area). 0=all, 0.5=bottom half.")
+    parser.add_argument("--adaptive-hsv", action="store_true",
+                        help="Auto-tune HSV thresholds per image based on lighting conditions.")
     return parser.parse_args()
 
 
@@ -65,6 +70,7 @@ def decide_class(
     model_class: str,
     class_mode: str,
     hsv_refine: bool,
+    adaptive_hsv: bool = False,
 ) -> tuple[str, dict]:
     normalized_model_class = normalize_class_name(model_class)
     need_hsv = class_mode == "hsv" or hsv_refine or (
@@ -76,7 +82,10 @@ def decide_class(
         return normalized_model_class, {}
 
     if need_hsv:
-        decision = classify_lane_color(image_bgr, region_mask)
+        if adaptive_hsv:
+            decision = adaptive_classify_lane_color(image_bgr, region_mask)
+        else:
+            decision = classify_lane_color(image_bgr, region_mask)
         return decision.cls, {
             "color_score": decision.score,
             "white_fraction": decision.white_fraction,
@@ -150,11 +159,18 @@ def predict_one_result(result, model_names: dict[int, str], args: argparse.Names
             angle, endpoints, bbox = fitted
 
         source_class = class_id_to_name(int(class_ids[idx]), model_names)
-        cls, color_info = decide_class(image_bgr, region_mask, source_class, args.class_mode, args.hsv_refine)
+        cls, color_info = decide_class(image_bgr, region_mask, source_class, args.class_mode, args.hsv_refine, args.adaptive_hsv)
         if not args.keep_unknown and (cls == UNKNOWN or (not is_eval_class(cls) and cls != LANE_LINE)):
             continue
         if cls == LANE_LINE and not args.keep_unknown:
             continue
+
+        # ROI check: only keep detections in the road area (bottom fraction of image)
+        if args.roi_fraction > 0 and args.roi_fraction < 1:
+            bbox_center_y = (bbox[1] + bbox[3]) / 2.0
+            roi_top = height * (1.0 - args.roi_fraction)
+            if bbox_center_y < roi_top:
+                continue
 
         inst = LineInstance(
             cls=cls,
@@ -208,9 +224,14 @@ def main() -> None:
     total = len(files) if files is not None else None
     images: dict[str, dict] = {}
 
+    t_start = time.perf_counter()
     for result in tqdm(model.predict(**predict_kwargs), total=total, desc="Predicting"):
         key, payload = predict_one_result(result, model_names, args)
         images[key] = payload
+    t_total = time.perf_counter() - t_start
+
+    n_images = len(images)
+    avg_ms = (t_total / n_images * 1000) if n_images > 0 else 0.0
 
     output = {
         "meta": {
@@ -221,7 +242,13 @@ def main() -> None:
             "iou": args.iou,
             "class_mode": args.class_mode,
             "hsv_refine": args.hsv_refine,
+            "roi_fraction": args.roi_fraction,
             "model_names": model_names,
+            "timing": {
+                "total_seconds": round(t_total, 3),
+                "num_images": n_images,
+                "avg_ms_per_image": round(avg_ms, 1),
+            },
         },
         "images": images,
     }
@@ -229,6 +256,7 @@ def main() -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Saved predictions to {out_path}")
+    print(f"Timing: {n_images} images in {t_total:.1f}s, avg {avg_ms:.1f} ms/image")
     if args.counts_out:
         counts_path = Path(args.counts_out)
         write_counts_csv(images, counts_path)
