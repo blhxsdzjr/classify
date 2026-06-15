@@ -10,7 +10,7 @@ import numpy as np
 from tqdm import tqdm
 
 from .classes import EVAL_CLASSES, LANE_LINE, UNKNOWN, class_id_to_name, is_eval_class, normalize_class_name
-from .color_classifier import adaptive_classify_lane_color, classify_lane_color
+from .color_classifier import adaptive_classify_lane_color, classify_lane_color, learned_classify_lane_color
 from .geometry import LineInstance, fit_line_from_points, line_from_bbox_xyxy, points_from_mask
 
 
@@ -28,10 +28,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default=None)
     parser.add_argument(
         "--class-mode",
-        choices=("auto", "model", "hsv"),
+        choices=("auto", "model", "hsv", "ml"),
         default="hsv",
-        help="hsv is recommended for the one-class lane_line model; auto uses model class if it is white/yellow.",
+        help="hsv/manual, ml/learned classifier, model for 2-class YOLO, auto for both.",
     )
+    parser.add_argument("--color-model", default="color_classifier.pkl",
+                        help="Path to learned color classifier (used with --class-mode ml).")
+    parser.add_argument("--color-scaler", default="color_scaler.pkl",
+                        help="Path to feature scaler (used with --class-mode ml).")
     parser.add_argument("--hsv-refine", action="store_true", help="Use HSV color result even for white/yellow model classes.")
     parser.add_argument("--keep-unknown", action="store_true", help="Keep detections whose color cannot be decided.")
     parser.add_argument("--save-vis", default=None, help="Optional directory for visualization images.")
@@ -71,16 +75,32 @@ def decide_class(
     class_mode: str,
     hsv_refine: bool,
     adaptive_hsv: bool = False,
+    color_model: str = "color_classifier.pkl",
+    color_scaler: str = "color_scaler.pkl",
+    bbox: np.ndarray | None = None,
 ) -> tuple[str, dict]:
     normalized_model_class = normalize_class_name(model_class)
-    need_hsv = class_mode == "hsv" or hsv_refine or (
-        class_mode == "auto" and normalized_model_class not in EVAL_CLASSES
-    )
+
+    # Model mode: use YOLO's own class prediction
     if class_mode == "model" and normalized_model_class in EVAL_CLASSES:
         return normalized_model_class, {}
     if class_mode == "model":
         return normalized_model_class, {}
 
+    # ML mode: learned classifier
+    if class_mode == "ml":
+        decision = learned_classify_lane_color(image_bgr, region_mask, bbox,
+                                                model_path=color_model, scaler_path=color_scaler)
+        return decision.cls, {
+            "color_score": decision.score,
+            "white_fraction": decision.white_fraction,
+            "yellow_fraction": decision.yellow_fraction,
+        }
+
+    # HSV mode
+    need_hsv = class_mode == "hsv" or hsv_refine or (
+        class_mode == "auto" and normalized_model_class not in EVAL_CLASSES
+    )
     if need_hsv:
         if adaptive_hsv:
             decision = adaptive_classify_lane_color(image_bgr, region_mask)
@@ -159,7 +179,7 @@ def predict_one_result(result, model_names: dict[int, str], args: argparse.Names
             angle, endpoints, bbox = fitted
 
         source_class = class_id_to_name(int(class_ids[idx]), model_names)
-        cls, color_info = decide_class(image_bgr, region_mask, source_class, args.class_mode, args.hsv_refine, args.adaptive_hsv)
+        cls, color_info = decide_class(image_bgr, region_mask, source_class, args.class_mode, args.hsv_refine, args.adaptive_hsv, args.color_model, args.color_scaler, xyxy[idx])
         if not args.keep_unknown and (cls == UNKNOWN or (not is_eval_class(cls) and cls != LANE_LINE)):
             continue
         if cls == LANE_LINE and not args.keep_unknown:

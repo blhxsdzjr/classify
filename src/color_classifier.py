@@ -246,3 +246,147 @@ def _classify_impl(
     if white_fraction > 0:
         return ColorDecision(WHITE, white_fraction, white_fraction, yellow_fraction, valid_pixels)
     return ColorDecision(UNKNOWN, 0.0, white_fraction, yellow_fraction, valid_pixels)
+
+
+# --- Learned color classifier (replaces HSV) ---
+
+_ml_model = None
+_ml_scaler = None
+
+
+def _load_ml_model(model_path: str = "color_classifier.pkl",
+                   scaler_path: str = "color_scaler.pkl") -> tuple:
+    """Lazy-load the learned color classifier and scaler."""
+    global _ml_model, _ml_scaler
+    if _ml_model is None:
+        import pickle
+        with open(model_path, "rb") as f:
+            _ml_model = pickle.load(f)
+        with open(scaler_path, "rb") as f:
+            _ml_scaler = pickle.load(f)
+    return _ml_model, _ml_scaler
+
+
+def _extract_ml_features(image_bgr: np.ndarray, mask: np.ndarray, bbox: np.ndarray) -> np.ndarray:
+    """Extract features for the learned classifier.
+
+    Replicates train_color_classifier.extract_features for inference.
+    """
+    import cv2
+
+    h, w = image_bgr.shape[:2]
+    x1, y1, x2, y2 = [max(0, int(v)) for v in bbox]
+    x2 = min(w, x2); y2 = min(h, y2)
+    if x2 <= x1 or y2 <= y1:
+        return np.zeros(60, dtype=np.float32)
+
+    crop = image_bgr[y1:y2, x1:x2]
+    crop_mask = mask[y1:y2, x1:x2] if mask.shape[:2] == (h, w) else np.ones(crop.shape[:2], dtype=bool)
+    if crop_mask.shape != crop.shape[:2]:
+        crop_mask = cv2.resize(crop_mask.astype('uint8'), (crop.shape[1], crop.shape[0]),
+                               interpolation=cv2.INTER_NEAREST).astype(bool)
+
+    features = []
+    hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
+    mask_flat = crop_mask.ravel()
+
+    # HSV histograms + stats
+    for ch_idx, bins in [(0, 12), (1, 8), (2, 8)]:
+        vals = hsv[:, :, ch_idx].ravel()[mask_flat]
+        if len(vals) == 0:
+            features.extend([0.0] * (bins + 3)); continue
+        rng = (0, 180) if ch_idx == 0 else (0, 256)
+        hist, _ = np.histogram(vals, bins=bins, range=rng, density=True)
+        features.extend(hist.astype(np.float32))
+        features.extend([float(np.mean(vals)), float(np.std(vals)), float(np.median(vals))])
+
+    # RGB per-channel stats
+    rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
+    for ch_idx in range(3):
+        vals = rgb[:, :, ch_idx].ravel()[mask_flat]
+        if len(vals) == 0:
+            features.extend([0.0] * 5); continue
+        features.extend([float(np.mean(vals)), float(np.std(vals)),
+                         float(np.percentile(vals, 10)), float(np.median(vals)),
+                         float(np.percentile(vals, 90))])
+
+    # Lab a,b histograms
+    lab = cv2.cvtColor(crop, cv2.COLOR_BGR2Lab)
+    for ch_idx in [1, 2]:
+        vals = lab[:, :, ch_idx].ravel()[mask_flat]
+        if len(vals) == 0:
+            features.extend([0.0] * 8); continue
+        hist, _ = np.histogram(vals, bins=8, range=(0, 256), density=True)
+        features.extend(hist.astype(np.float32))
+
+    # Contrast
+    kernel = np.ones((10, 10), dtype=np.uint8)
+    dilated = cv2.dilate(crop_mask.astype(np.uint8), kernel).astype(bool)
+    surround = dilated & ~crop_mask
+    lane_v = hsv[:, :, 2].ravel()[mask_flat]
+    surround_v = hsv[:, :, 2].ravel()[surround.ravel()] if surround.sum() > 0 else lane_v
+    features.append(float(np.median(lane_v)) / max(float(np.median(surround_v)), 1.0))
+    features.append(float(np.mean(lane_v)) - float(np.mean(surround_v)))
+
+    # Shape
+    bbox_w, bbox_h = x2 - x1, y2 - y1
+    features.append(bbox_h / max(bbox_w, 1.0))
+    features.append(float(mask_flat.sum()) / max(bbox_w * bbox_h, 1.0))
+
+    return np.asarray(features, dtype=np.float32)
+
+
+def learned_classify_lane_color(
+    image_bgr: np.ndarray,
+    mask: np.ndarray | None = None,
+    bbox: np.ndarray | None = None,
+    *,
+    model_path: str = "color_classifier.pkl",
+    scaler_path: str = "color_scaler.pkl",
+) -> ColorDecision:
+    """Classify lane color using a learned classifier (logistic regression).
+
+    Requires color_classifier.pkl and color_scaler.pkl from train_color_classifier.py.
+    Falls back to HSV if model files are missing.
+    """
+    if image_bgr.size == 0:
+        return ColorDecision(UNKNOWN, 0.0, 0.0, 0.0, 0)
+
+    import cv2
+    from pathlib import Path
+
+    if not Path(model_path).exists() or not Path(scaler_path).exists():
+        # Fallback to HSV
+        return classify_lane_color(image_bgr, mask)
+
+    h, w = image_bgr.shape[:2]
+    mask_bool = _safe_mask(mask, (h, w))
+
+    if bbox is None:
+        # Estimate bbox from mask
+        ys, xs = np.where(mask_bool)
+        if len(xs) == 0:
+            return ColorDecision(UNKNOWN, 0.0, 0.0, 0.0, 0)
+        bbox = np.array([xs.min(), ys.min(), xs.max(), ys.max()])
+
+    feats = _extract_ml_features(image_bgr, mask_bool, bbox)
+    feats = np.nan_to_num(feats, nan=0.0, posinf=0.0, neginf=0.0)
+
+    try:
+        model, scaler = _load_ml_model(model_path, scaler_path)
+        X = scaler.transform(feats.reshape(1, -1))
+        proba = model.predict_proba(X)[0]
+        # model.classes_[0] = white (0), classes_[1] = yellow (1)
+        white_prob = proba[0] if model.classes_[0] == 0 else proba[1]
+        yellow_prob = proba[1] if model.classes_[1] == 1 else proba[0]
+
+        if yellow_prob > 0.5:
+            return ColorDecision(YELLOW, yellow_prob, white_prob, yellow_prob, int(mask_bool.sum()))
+        elif white_prob > 0.5:
+            return ColorDecision(WHITE, white_prob, white_prob, yellow_prob, int(mask_bool.sum()))
+        elif yellow_prob > white_prob:
+            return ColorDecision(YELLOW, yellow_prob, white_prob, yellow_prob, int(mask_bool.sum()))
+        else:
+            return ColorDecision(WHITE, white_prob, white_prob, yellow_prob, int(mask_bool.sum()))
+    except Exception:
+        return classify_lane_color(image_bgr, mask)
