@@ -1,0 +1,4320 @@
+{
+  "meta": {
+    "weights": "runs/segment/runs/segment/local_colm_lane_line_v3/weights/best.pt",
+    "source": "datasets/local_colm/images/test",
+    "imgsz": 960,
+    "conf": 0.05,
+    "iou": 0.5,
+    "class_mode": "hsv",
+    "hsv_refine": false,
+    "roi_fraction": 0.5,
+    "model_names": {
+      "0": "lane_line"
+    },
+    "timing": {
+      "total_seconds": 11.376,
+      "num_images": 37,
+      "avg_ms_per_image": 307.5
+    },
+    "count_constraints": {
+      "enabled": true,
+      "gt_xlsx": "结果统计.xlsx",
+      "gt_counts": null,
+      "min_conf": 0.0,
+      "class_order": "rare-first",
+      "note": "This uses count-level GT as a constraint; do not report it as unconstrained model performance."
+    }
+  },
+  "images": {
+    "1.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.7089095711708069,
+          "angle_deg": 126.08820672972728,
+          "endpoints": [
+            [
+              529.824951171875,
+              887.3123168945312
+            ],
+            [
+              393.577880859375,
+              1074.2344970703125
+            ]
+          ],
+          "bbox": [
+            396.0,
+            894.0,
+            539.0,
+            1076.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8823846776369032,
+          "white_fraction": 0.8823846776369032,
+          "yellow_fraction": 0.20097113568923658,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.7247438610259304,
+            "yellow_score": 0.11119381444760336
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.5120588541030884,
+          "angle_deg": 44.64818749649406,
+          "endpoints": [
+            [
+              1323.6767578125,
+              759.3271484375
+            ],
+            [
+              1428.8546142578125,
+              863.2212524414062
+            ]
+          ],
+          "bbox": [
+            1324.0,
+            759.0,
+            1435.0,
+            859.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.750966079862602,
+          "white_fraction": 0.750966079862602,
+          "yellow_fraction": 0.3920137398024903,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.45131095312039915,
+            "yellow_score": 0.18150716487969284
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.3018455505371094,
+          "angle_deg": 90.40447945025736,
+          "endpoints": [
+            [
+              411.61639404296875,
+              845.9478759765625
+            ],
+            [
+              410.2465515136719,
+              1039.9876708984375
+            ]
+          ],
+          "bbox": [
+            346.0,
+            846.0,
+            419.0,
+            1040.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9962121212121212,
+          "white_fraction": 0.9962121212121212,
+          "yellow_fraction": 0.03977272727272727,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.34537876772158077,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "10.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.5035449862480164,
+          "angle_deg": 133.15981484385625,
+          "endpoints": [
+            [
+              607.49365234375,
+              811.2099609375
+            ],
+            [
+              392.8768005371094,
+              1040.0751953125
+            ]
+          ],
+          "bbox": [
+            380.0,
+            822.0,
+            619.0,
+            1046.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8048881524440762,
+          "white_fraction": 0.12137531068765535,
+          "yellow_fraction": 0.8048881524440762,
+          "count_constraint": {
+            "target_class": "yellow_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.04085305946838194,
+            "yellow_score": 0.4777732451332929
+          }
+        }
+      ]
+    },
+    "11.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.47398868203163147,
+          "angle_deg": 135.16129197784994,
+          "endpoints": [
+            [
+              575.07861328125,
+              818.0564575195312
+            ],
+            [
+              358.9750671386719,
+              1032.9466552734375
+            ]
+          ],
+          "bbox": [
+            364.0,
+            822.0,
+            579.0,
+            1038.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.6152840503922035,
+          "white_fraction": 0.0,
+          "yellow_fraction": 0.6152840503922035,
+          "count_constraint": {
+            "target_class": "yellow_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.3627359784252292
+          }
+        }
+      ]
+    },
+    "12.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.6059778928756714,
+          "angle_deg": 125.01168393684536,
+          "endpoints": [
+            [
+              736.0709838867188,
+              767.3441162109375
+            ],
+            [
+              582.6991577148438,
+              986.2866821289062
+            ]
+          ],
+          "bbox": [
+            586.0,
+            775.0,
+            747.0,
+            990.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7798389919495975,
+          "white_fraction": 0.1550577528876444,
+          "yellow_fraction": 0.7798389919495975,
+          "count_constraint": {
+            "target_class": "yellow_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.07033331091269607,
+            "yellow_score": 0.5587637945368109
+          }
+        }
+      ]
+    },
+    "13.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "14.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.7252469062805176,
+          "angle_deg": 136.9791709462395,
+          "endpoints": [
+            [
+              696.6806030273438,
+              605.5145874023438
+            ],
+            [
+              503.80523681640625,
+              785.5049438476562
+            ]
+          ],
+          "bbox": [
+            508.0,
+            608.0,
+            699.0,
+            790.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.4214912280701754,
+          "white_fraction": 0.055592105263157894,
+          "yellow_fraction": 0.4214912280701754,
+          "count_constraint": {
+            "target_class": "yellow_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.025033741896612602,
+            "yellow_score": 0.4124563450065621
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.5057525634765625,
+          "angle_deg": 75.79101969742933,
+          "endpoints": [
+            [
+              979.2675170898438,
+              908.1598510742188
+            ],
+            [
+              1022.7947998046875,
+              1080.0648193359375
+            ]
+          ],
+          "bbox": [
+            972.0,
+            910.0,
+            1033.0,
+            1079.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.49591002044989774,
+          "white_fraction": 0.49591002044989774,
+          "yellow_fraction": 0.0,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.3266706486177347,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "15.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.4999728202819824,
+          "angle_deg": 116.4401259532336,
+          "endpoints": [
+            [
+              685.955078125,
+              863.5130615234375
+            ],
+            [
+              581.8273315429688,
+              1072.90869140625
+            ]
+          ],
+          "bbox": [
+            574.0,
+            870.0,
+            699.0,
+            1074.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9419044345135785,
+          "white_fraction": 0.07854932966655208,
+          "yellow_fraction": 0.9419044345135785,
+          "count_constraint": {
+            "target_class": "yellow_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.01572619905665225,
+            "yellow_score": 0.5439589131079248
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.13963057100772858,
+          "angle_deg": 82.64000048416386,
+          "endpoints": [
+            [
+              273.20745849609375,
+              486.26068115234375
+            ],
+            [
+              295.1671447753906,
+              656.2700805664062
+            ]
+          ],
+          "bbox": [
+            252.0,
+            489.0,
+            331.0,
+            655.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.414664013470075,
+          "white_fraction": 0.414664013470075,
+          "yellow_fraction": 0.4123679779580591,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.075965399816963,
+            "yellow_score": 0.05468418757872707
+          }
+        }
+      ]
+    },
+    "16.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.1532021164894104,
+          "angle_deg": 118.01731085087961,
+          "endpoints": [
+            [
+              810.62451171875,
+              564.6076049804688
+            ],
+            [
+              749.3956298828125,
+              679.6784057617188
+            ]
+          ],
+          "bbox": [
+            740.0,
+            568.0,
+            817.0,
+            682.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8270893371757925,
+          "white_fraction": 0.010806916426512969,
+          "yellow_fraction": 0.8270893371757925,
+          "count_constraint": {
+            "target_class": "yellow_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.14960937233110325
+          }
+        }
+      ]
+    },
+    "17.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.5475866794586182,
+          "angle_deg": 55.96987980259852,
+          "endpoints": [
+            [
+              1319.1253662109375,
+              825.2916870117188
+            ],
+            [
+              1451.982666015625,
+              1022.0375366210938
+            ]
+          ],
+          "bbox": [
+            1324.0,
+            822.0,
+            1463.0,
+            1020.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8803432642487047,
+          "white_fraction": 0.3397020725388601,
+          "yellow_fraction": 0.8803432642487047,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.1619131176640796,
+            "yellow_score": 0.5549014302771635
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.4308070242404938,
+          "angle_deg": 52.095547716760386,
+          "endpoints": [
+            [
+              1141.8173828125,
+              566.5849609375
+            ],
+            [
+              1200.9810791015625,
+              642.5718994140625
+            ]
+          ],
+          "bbox": [
+            1140.0,
+            568.0,
+            1203.0,
+            641.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9957264957264957,
+          "white_fraction": 0.9957264957264957,
+          "yellow_fraction": 0.00641025641025641,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.49344894304298437,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.3479275405406952,
+          "angle_deg": 54.49590614360327,
+          "endpoints": [
+            [
+              1086.3199462890625,
+              485.0521545410156
+            ],
+            [
+              1249.1607666015625,
+              713.3121337890625
+            ]
+          ],
+          "bbox": [
+            1092.0,
+            481.0,
+            1253.0,
+            712.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9322381930184805,
+          "white_fraction": 0.9322381930184805,
+          "yellow_fraction": 0.11581108829568788,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.3745257794202231,
+            "yellow_score": 0.024076300033308885
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.34593337774276733,
+          "angle_deg": 114.20434977490638,
+          "endpoints": [
+            [
+              885.6942138671875,
+              570.0189208984375
+            ],
+            [
+              771.3839721679688,
+              824.3191528320312
+            ]
+          ],
+          "bbox": [
+            764.0,
+            576.0,
+            899.0,
+            821.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8639108221086855,
+          "white_fraction": 0.8639108221086855,
+          "yellow_fraction": 0.5944031583836508,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.34046440080597234,
+            "yellow_score": 0.190681112882596
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.28110986948013306,
+          "angle_deg": 121.68117128046995,
+          "endpoints": [
+            [
+              217.53570556640625,
+              760.3472290039062
+            ],
+            [
+              112.23300170898438,
+              930.9722290039062
+            ]
+          ],
+          "bbox": [
+            116.0,
+            781.0,
+            251.0,
+            937.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.5933764940239044,
+          "white_fraction": 0.5933764940239044,
+          "yellow_fraction": 0.8398904382470119,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.1971653946359972,
+            "yellow_score": 0.22776129203384732
+          }
+        }
+      ]
+    },
+    "18.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.7360158562660217,
+          "angle_deg": 128.1881311479154,
+          "endpoints": [
+            [
+              803.160400390625,
+              593.83349609375
+            ],
+            [
+              598.040771484375,
+              854.605224609375
+            ]
+          ],
+          "bbox": [
+            596.0,
+            600.0,
+            811.0,
+            853.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.43770402611534276,
+          "white_fraction": 0.43770402611534276,
+          "yellow_fraction": 0.7188973521944142,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.40610348950013503,
+            "yellow_score": 0.5130119950641291
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.5240645408630371,
+          "angle_deg": 45.83233169811349,
+          "endpoints": [
+            [
+              1518.908935546875,
+              843.1744384765625
+            ],
+            [
+              1696.7705078125,
+              1026.2801513671875
+            ]
+          ],
+          "bbox": [
+            1516.0,
+            846.0,
+            1695.0,
+            1028.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8205950243652218,
+          "white_fraction": 0.05283406001538856,
+          "yellow_fraction": 0.8205950243652218,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.006186219669972117,
+            "yellow_score": 0.5072700129377136
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.18847183883190155,
+          "angle_deg": 45.432771793380674,
+          "endpoints": [
+            [
+              1583.0137939453125,
+              906.911376953125
+            ],
+            [
+              1753.1824951171875,
+              1079.6702880859375
+            ]
+          ],
+          "bbox": [
+            1588.0,
+            902.0,
+            1763.0,
+            1070.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8480769230769231,
+          "white_fraction": 0.021745562130177514,
+          "yellow_fraction": 0.8480769230769231,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.18790447168393865
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.06452258676290512,
+          "angle_deg": 43.07632998572932,
+          "endpoints": [
+            [
+              1631.882568359375,
+              960.8475341796875
+            ],
+            [
+              1756.514892578125,
+              1077.3797607421875
+            ]
+          ],
+          "bbox": [
+            1628.0,
+            965.0,
+            1755.0,
+            1079.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8378782840039907,
+          "white_fraction": 0.012304622547389425,
+          "yellow_fraction": 0.8378782840039907,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.06370076598704237
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.056551214307546616,
+          "angle_deg": 128.27049843140307,
+          "endpoints": [
+            [
+              803.1049194335938,
+              593.7714233398438
+            ],
+            [
+              692.2935791015625,
+              734.2315673828125
+            ]
+          ],
+          "bbox": [
+            692.0,
+            600.0,
+            811.0,
+            734.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.48205326128907755,
+          "white_fraction": 0.48205326128907755,
+          "yellow_fraction": 0.7375530683133925,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.03365790335147342,
+            "yellow_score": 0.040346486765038714
+          }
+        }
+      ]
+    },
+    "19.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.5641214847564697,
+          "angle_deg": 131.451193722977,
+          "endpoints": [
+            [
+              564.4317016601562,
+              815.2645263671875
+            ],
+            [
+              410.9348449707031,
+              989.0592651367188
+            ]
+          ],
+          "bbox": [
+            412.0,
+            814.0,
+            563.0,
+            990.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.81875,
+          "white_fraction": 0.007291666666666667,
+          "yellow_fraction": 0.81875,
+          "count_constraint": {
+            "target_class": "yellow_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.5462870190665126
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.2938668429851532,
+          "angle_deg": 165.43594949007888,
+          "endpoints": [
+            [
+              599.3488159179688,
+              765.4935913085938
+            ],
+            [
+              613.7172241210938,
+              761.760498046875
+            ]
+          ],
+          "bbox": [
+            600.0,
+            759.0,
+            613.0,
+            770.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9305555555555556,
+          "white_fraction": 0.013888888888888888,
+          "yellow_fraction": 0.9305555555555556,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.3173353755846619
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.1466071903705597,
+          "angle_deg": 132.622026667504,
+          "endpoints": [
+            [
+              522.8889770507812,
+              877.8978271484375
+            ],
+            [
+              409.20745849609375,
+              1001.43017578125
+            ]
+          ],
+          "bbox": [
+            412.0,
+            878.0,
+            523.0,
+            1004.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7767387492694331,
+          "white_fraction": 0.014026884862653419,
+          "yellow_fraction": 0.7767387492694331,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.13576374212894993
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.08122356235980988,
+          "angle_deg": 128.33815014627024,
+          "endpoints": [
+            [
+              547.6339721679688,
+              840.1746826171875
+            ],
+            [
+              449.6172180175781,
+              964.1156005859375
+            ]
+          ],
+          "bbox": [
+            452.0,
+            846.0,
+            555.0,
+            966.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8266761768901569,
+          "white_fraction": 0.014978601997146932,
+          "yellow_fraction": 0.8266761768901569,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.07926828758830946
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.05750400573015213,
+          "angle_deg": 137.74983750210544,
+          "endpoints": [
+            [
+              496.2952575683594,
+              915.0223388671875
+            ],
+            [
+              412.79193115234375,
+              990.871826171875
+            ]
+          ],
+          "bbox": [
+            412.0,
+            918.0,
+            499.0,
+            990.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7377260981912145,
+          "white_fraction": 0.014211886304909561,
+          "yellow_fraction": 0.7377260981912145,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.051006944617617504
+          }
+        }
+      ]
+    },
+    "2.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.38361039757728577,
+          "angle_deg": 53.335238648193,
+          "endpoints": [
+            [
+              1120.72412109375,
+              517.4832763671875
+            ],
+            [
+              1336.0361328125,
+              806.717529296875
+            ]
+          ],
+          "bbox": [
+            1116.0,
+            521.0,
+            1337.0,
+            806.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9864738805970149,
+          "white_fraction": 0.9864738805970149,
+          "yellow_fraction": 0.0009328358208955224,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.4359453048960153,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.31688979268074036,
+          "angle_deg": 54.542720416062195,
+          "endpoints": [
+            [
+              1169.0948486328125,
+              580.3716430664062
+            ],
+            [
+              1382.4549560546875,
+              879.9638061523438
+            ]
+          ],
+          "bbox": [
+            1164.0,
+            584.0,
+            1381.0,
+            881.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9903388822829964,
+          "white_fraction": 0.9903388822829964,
+          "yellow_fraction": 0.00133769322235434,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.3613405569260507,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.29304930567741394,
+          "angle_deg": 54.13236691893547,
+          "endpoints": [
+            [
+              1364.4874267578125,
+              853.6475830078125
+            ],
+            [
+              1463.0478515625,
+              989.9654541015625
+            ]
+          ],
+          "bbox": [
+            1364.0,
+            854.0,
+            1465.0,
+            990.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9867172675521821,
+          "white_fraction": 0.9867172675521821,
+          "yellow_fraction": 0.0023719165085388993,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.3330794515833966,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "20.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.7629931569099426,
+          "angle_deg": 46.472688437995615,
+          "endpoints": [
+            [
+              922.137939453125,
+              617.7687377929688
+            ],
+            [
+              1068.659423828125,
+              772.0227661132812
+            ]
+          ],
+          "bbox": [
+            924.0,
+            616.0,
+            1075.0,
+            766.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7000539228902669,
+          "white_fraction": 0.7000539228902669,
+          "yellow_fraction": 0.31801024534915073,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.636453344118293,
+            "yellow_score": 0.2159328233969922
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.6370539665222168,
+          "angle_deg": 48.64405146928555,
+          "endpoints": [
+            [
+              1599.1021728515625,
+              637.269287109375
+            ],
+            [
+              1710.09423828125,
+              763.3603515625
+            ]
+          ],
+          "bbox": [
+            1596.0,
+            640.0,
+            1723.0,
+            766.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.6140385371608337,
+          "white_fraction": 0.6140385371608337,
+          "yellow_fraction": 0.40405033425088477,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.47386368726868355,
+            "yellow_score": 0.23784308382436323
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.43574440479278564,
+          "angle_deg": 132.58547280527125,
+          "endpoints": [
+            [
+              431.1170349121094,
+              838.1075439453125
+            ],
+            [
+              410.0417785644531,
+              861.0383911132812
+            ]
+          ],
+          "bbox": [
+            410.0,
+            838.0,
+            431.0,
+            861.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9785714285714285,
+          "white_fraction": 0.9785714285714285,
+          "yellow_fraction": 0.6571428571428571,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.47745136925152365,
+            "yellow_score": 0.2650259719150407
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.4024173319339752,
+          "angle_deg": 52.28739191053503,
+          "endpoints": [
+            [
+              1465.6553955078125,
+              797.719970703125
+            ],
+            [
+              1491.99169921875,
+              831.7796630859375
+            ]
+          ],
+          "bbox": [
+            1464.0,
+            799.0,
+            1493.0,
+            831.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 1.0,
+          "white_fraction": 1.0,
+          "yellow_fraction": 0.0,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.46277993172407145,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "21.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.7872617840766907,
+          "angle_deg": 52.276110611804064,
+          "endpoints": [
+            [
+              1164.373046875,
+              530.5230102539062
+            ],
+            [
+              1305.066162109375,
+              712.4017333984375
+            ]
+          ],
+          "bbox": [
+            1156.0,
+            537.0,
+            1309.0,
+            714.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.5550089445438283,
+          "white_fraction": 0.5550089445438283,
+          "yellow_fraction": 0.23002385211687537,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.5459721500617127,
+            "yellow_score": 0.1592421216047194
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.5951362252235413,
+          "angle_deg": 70.14722020927985,
+          "endpoints": [
+            [
+              1116.626953125,
+              787.8851318359375
+            ],
+            [
+              1172.267333984375,
+              941.9866333007812
+            ]
+          ],
+          "bbox": [
+            1108.0,
+            791.0,
+            1187.0,
+            941.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.49829842931937174,
+          "white_fraction": 0.49829842931937174,
+          "yellow_fraction": 0.555628272251309,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.36929215441472557,
+            "yellow_score": 0.31584674026212456
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.13770915567874908,
+          "angle_deg": 52.04525048966605,
+          "endpoints": [
+            [
+              1170.1812744140625,
+              539.1785278320312
+            ],
+            [
+              1277.1536865234375,
+              676.320068359375
+            ]
+          ],
+          "bbox": [
+            1164.0,
+            544.0,
+            1275.0,
+            678.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.6012686905301314,
+          "white_fraction": 0.6012686905301314,
+          "yellow_fraction": 0.24309016764839148,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.10178278997375056,
+            "yellow_score": 0.029335731555216984
+          }
+        }
+      ]
+    },
+    "22.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.7046459913253784,
+          "angle_deg": 132.24249155100563,
+          "endpoints": [
+            [
+              812.8768310546875,
+              515.4395141601562
+            ],
+            [
+              620.9138793945312,
+              726.8298950195312
+            ]
+          ],
+          "bbox": [
+            620.0,
+            521.0,
+            819.0,
+            726.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9886102603369066,
+          "white_fraction": 0.9886102603369066,
+          "yellow_fraction": 0.05359877488514548,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.8004287475352083,
+            "yellow_score": 0.002937149016292131
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.6280583739280701,
+          "angle_deg": 42.969936552467566,
+          "endpoints": [
+            [
+              1301.4755859375,
+              598.416015625
+            ],
+            [
+              1494.5089111328125,
+              778.2332763671875
+            ]
+          ],
+          "bbox": [
+            1300.0,
+            600.0,
+            1491.0,
+            782.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.6290582959641255,
+          "white_fraction": 0.27345291479820627,
+          "yellow_fraction": 0.6290582959641255,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.15199012649059296,
+            "yellow_score": 0.4807068669076992
+          }
+        },
+        {
+          "class": "yellow_lane",
+          "conf": 0.5915068984031677,
+          "angle_deg": 129.86836617244225,
+          "endpoints": [
+            [
+              549.7083740234375,
+              817.5804443359375
+            ],
+            [
+              382.35040283203125,
+              1017.9630126953125
+            ]
+          ],
+          "bbox": [
+            380.0,
+            822.0,
+            555.0,
+            1016.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9064352243861135,
+          "white_fraction": 0.3983911939034716,
+          "yellow_fraction": 0.9064352243861135,
+          "count_constraint": {
+            "target_class": "yellow_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.20884300504797698,
+            "yellow_score": 0.6131061659676357
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.3791877329349518,
+          "angle_deg": 132.03704193650321,
+          "endpoints": [
+            [
+              491.6640930175781,
+              895.3861083984375
+            ],
+            [
+              375.6436767578125,
+              1024.072509765625
+            ]
+          ],
+          "bbox": [
+            380.0,
+            902.0,
+            499.0,
+            1028.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9345032130499259,
+          "white_fraction": 0.2760751359367276,
+          "yellow_fraction": 0.9345032130499259,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0869666971767149,
+            "yellow_score": 0.4059960994712946
+          }
+        }
+      ]
+    },
+    "23.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.386274516582489,
+          "angle_deg": 51.01286300217836,
+          "endpoints": [
+            [
+              777.6031494140625,
+              722.4647216796875
+            ],
+            [
+              906.5820922851562,
+              881.8135375976562
+            ]
+          ],
+          "bbox": [
+            772.0,
+            727.0,
+            915.0,
+            885.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 1.0,
+          "white_fraction": 0.03747870528109029,
+          "yellow_fraction": 1.0,
+          "count_constraint": {
+            "target_class": "yellow_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.4434918406316328
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.144257590174675,
+          "angle_deg": 114.65646219987855,
+          "endpoints": [
+            [
+              151.12908935546875,
+              713.5509033203125
+            ],
+            [
+              75.73562622070312,
+              877.7966918945312
+            ]
+          ],
+          "bbox": [
+            74.0,
+            719.0,
+            163.0,
+            877.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9157939428247948,
+          "white_fraction": 0.0,
+          "yellow_fraction": 0.9157939428247948,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.1537488658146702
+          }
+        }
+      ]
+    },
+    "24.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.6809651255607605,
+          "angle_deg": 125.6204968890361,
+          "endpoints": [
+            [
+              853.47900390625,
+              511.3126220703125
+            ],
+            [
+              693.2753295898438,
+              734.9137573242188
+            ]
+          ],
+          "bbox": [
+            692.0,
+            521.0,
+            867.0,
+            734.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.4720228234861034,
+          "white_fraction": 0.4720228234861034,
+          "yellow_fraction": 9.203018590097552e-05,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.4235727166295183,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "25.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.6024011969566345,
+          "angle_deg": 57.264874888113766,
+          "endpoints": [
+            [
+              1348.970458984375,
+              806.3761596679688
+            ],
+            [
+              1440.9521484375,
+              949.4593505859375
+            ]
+          ],
+          "bbox": [
+            1348.0,
+            807.0,
+            1439.0,
+            952.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7693798449612403,
+          "white_fraction": 0.7693798449612403,
+          "yellow_fraction": 0.8383720930232558,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.5285837014458439,
+            "yellow_score": 0.48186258535630017
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.3366446793079376,
+          "angle_deg": 56.25975672171726,
+          "endpoints": [
+            [
+              1201.0528564453125,
+              615.2967529296875
+            ],
+            [
+              1285.4716796875,
+              741.6849365234375
+            ]
+          ],
+          "bbox": [
+            1200.0,
+            616.0,
+            1285.0,
+            742.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9652892561983472,
+          "white_fraction": 0.9652892561983472,
+          "yellow_fraction": 0.8330578512396695,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.36143396932970395,
+            "yellow_score": 0.26419651857092363
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.32066982984542847,
+          "angle_deg": 137.8876280783587,
+          "endpoints": [
+            [
+              575.9949951171875,
+              724.525634765625
+            ],
+            [
+              401.5139465332031,
+              882.2498168945312
+            ]
+          ],
+          "bbox": [
+            404.0,
+            719.0,
+            571.0,
+            885.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8412073490813649,
+          "white_fraction": 0.33085447652376787,
+          "yellow_fraction": 0.8412073490813649,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.09260755781574267,
+            "yellow_score": 0.31254553953693576
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.18721334636211395,
+          "angle_deg": 53.468939090137106,
+          "endpoints": [
+            [
+              1139.8890380859375,
+              537.0822143554688
+            ],
+            [
+              1306.4697265625,
+              761.9480590820312
+            ]
+          ],
+          "bbox": [
+            1140.0,
+            537.0,
+            1303.0,
+            766.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7864746399499061,
+          "white_fraction": 0.7864746399499061,
+          "yellow_fraction": 0.9408265497808391,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.16651378679173806,
+            "yellow_score": 0.16877335927209486
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.062242694199085236,
+          "angle_deg": 54.74484643356195,
+          "endpoints": [
+            [
+              1104.3922119140625,
+              472.2403869628906
+            ],
+            [
+              1352.7171630859375,
+              823.5450439453125
+            ]
+          ],
+          "bbox": [
+            1092.0,
+            481.0,
+            1379.0,
+            829.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.6452780229479259,
+          "white_fraction": 0.6452780229479259,
+          "yellow_fraction": 0.931332744924978,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.046601813823602845,
+            "yellow_score": 0.05596046710717315
+          }
+        }
+      ]
+    },
+    "26.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.8982041478157043,
+          "angle_deg": 133.37779309938998,
+          "endpoints": [
+            [
+              689.9813232421875,
+              613.092529296875
+            ],
+            [
+              828.3209838867188,
+              466.6888427734375
+            ]
+          ],
+          "bbox": [
+            692.0,
+            473.0,
+            835.0,
+            615.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.39041322314049587,
+          "white_fraction": 0.39041322314049587,
+          "yellow_fraction": 0.4649586776859504,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.46452000791622594,
+            "yellow_score": 0.4000942740410813
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.07498576492071152,
+          "angle_deg": 45.91308832770684,
+          "endpoints": [
+            [
+              1461.3697509765625,
+              805.4221801757812
+            ],
+            [
+              1660.021484375,
+              1010.508544921875
+            ]
+          ],
+          "bbox": [
+            1468.0,
+            799.0,
+            1675.0,
+            1006.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.6847975134838651,
+          "white_fraction": 0.3237041777127708,
+          "yellow_fraction": 0.6847975134838651,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.021705702105602614,
+            "yellow_score": 0.06138426983380451
+          }
+        }
+      ]
+    },
+    "27.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.7545152902603149,
+          "angle_deg": 114.78420112965733,
+          "endpoints": [
+            [
+              812.7105102539062,
+              736.402099609375
+            ],
+            [
+              743.378173828125,
+              886.559814453125
+            ]
+          ],
+          "bbox": [
+            740.0,
+            743.0,
+            827.0,
+            885.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7644169158479283,
+          "white_fraction": 0.7644169158479283,
+          "yellow_fraction": 0.0,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.6899415446799416,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.7281104922294617,
+          "angle_deg": 78.92994270441012,
+          "endpoints": [
+            [
+              1080.59423828125,
+              867.5359497070312
+            ],
+            [
+              1104.857421875,
+              991.549560546875
+            ]
+          ],
+          "bbox": [
+            1068.0,
+            870.0,
+            1123.0,
+            988.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.4133306645316253,
+          "white_fraction": 0.4133306645316253,
+          "yellow_fraction": 0.07165732586068856,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.4075582448998578,
+            "yellow_score": 0.037126931123990264
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.6791156530380249,
+          "angle_deg": 136.23489810826086,
+          "endpoints": [
+            [
+              339.7111511230469,
+              985.6984252929688
+            ],
+            [
+              455.7250061035156,
+              874.5806884765625
+            ]
+          ],
+          "bbox": [
+            340.0,
+            878.0,
+            459.0,
+            986.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.5241325332637621,
+          "white_fraction": 0.5241325332637621,
+          "yellow_fraction": 0.013827289329506914,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.4573444391304602,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "28.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.707263171672821,
+          "angle_deg": 128.97552263490815,
+          "endpoints": [
+            [
+              802.7415771484375,
+              688.3182983398438
+            ],
+            [
+              701.1268310546875,
+              813.9117431640625
+            ]
+          ],
+          "bbox": [
+            700.0,
+            695.0,
+            811.0,
+            813.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.47161001120657453,
+          "white_fraction": 0.47161001120657453,
+          "yellow_fraction": 0.0044826298094882335,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.43948334812071504,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.23983629047870636,
+          "angle_deg": 38.85306199471097,
+          "endpoints": [
+            [
+              1409.657958984375,
+              642.9073486328125
+            ],
+            [
+              1580.30908203125,
+              780.3748168945312
+            ]
+          ],
+          "bbox": [
+            1412.0,
+            640.0,
+            1579.0,
+            782.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.4678690512276447,
+          "white_fraction": 0.4678690512276447,
+          "yellow_fraction": 0.0,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.14818742124803608,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "29.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.7746077179908752,
+          "angle_deg": 56.653878131111625,
+          "endpoints": [
+            [
+              902.0431518554688,
+              741.6555786132812
+            ],
+            [
+              1014.2274169921875,
+              912.1405029296875
+            ]
+          ],
+          "bbox": [
+            900.0,
+            743.0,
+            1019.0,
+            909.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.5772766446423442,
+          "white_fraction": 0.5772766446423442,
+          "yellow_fraction": 0.004452743464521689,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.5631816455817743,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.6806473135948181,
+          "angle_deg": 49.85683225241544,
+          "endpoints": [
+            [
+              1270.8382568359375,
+              772.6063232421875
+            ],
+            [
+              1462.4659423828125,
+              999.8239135742188
+            ]
+          ],
+          "bbox": [
+            1268.0,
+            775.0,
+            1471.0,
+            996.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9808345463367297,
+          "white_fraction": 0.9808345463367297,
+          "yellow_fraction": 0.00363901018922853,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.7695756519588379,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.6746850609779358,
+          "angle_deg": 54.45283200243185,
+          "endpoints": [
+            [
+              1014.8452758789062,
+              518.9669799804688
+            ],
+            [
+              1081.5511474609375,
+              612.322509765625
+            ]
+          ],
+          "bbox": [
+            1012.0,
+            521.0,
+            1089.0,
+            607.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7700708382526564,
+          "white_fraction": 0.7700708382526564,
+          "yellow_fraction": 0.0,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.6207580496105141,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "3.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.5249428749084473,
+          "angle_deg": 56.8085061333521,
+          "endpoints": [
+            [
+              1287.398681640625,
+              767.5432739257812
+            ],
+            [
+              1383.6025390625,
+              914.6058349609375
+            ]
+          ],
+          "bbox": [
+            1276.0,
+            775.0,
+            1387.0,
+            915.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 1.0,
+          "white_fraction": 1.0,
+          "yellow_fraction": 0.0,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.6036843061447144,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.2061305046081543,
+          "angle_deg": 56.2488736558532,
+          "endpoints": [
+            [
+              1212.192138671875,
+              658.5260009765625
+            ],
+            [
+              1367.6749267578125,
+              891.2125854492188
+            ]
+          ],
+          "bbox": [
+            1204.0,
+            664.0,
+            1367.0,
+            893.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9952998379254457,
+          "white_fraction": 0.9952998379254457,
+          "yellow_fraction": 0.0,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.23608123351920945,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.07247580587863922,
+          "angle_deg": 56.40960488643033,
+          "endpoints": [
+            [
+              1173.5108642578125,
+              601.6832885742188
+            ],
+            [
+              1379.884033203125,
+              912.412841796875
+            ]
+          ],
+          "bbox": [
+            1164.0,
+            608.0,
+            1379.0,
+            913.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9952091610189296,
+          "white_fraction": 0.9952091610189296,
+          "yellow_fraction": 0.0,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.08299995684444723,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "30.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.6227445602416992,
+          "angle_deg": 52.38130308910503,
+          "endpoints": [
+            [
+              1138.0137939453125,
+              631.6956176757812
+            ],
+            [
+              1265.59326171875,
+              797.2490844726562
+            ]
+          ],
+          "bbox": [
+            1148.0,
+            624.0,
+            1279.0,
+            790.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7736911862160372,
+          "white_fraction": 0.7736911862160372,
+          "yellow_fraction": 0.006792577866136514,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.5750121595134319,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.4304760694503784,
+          "angle_deg": 60.29501456399902,
+          "endpoints": [
+            [
+              1250.0341796875,
+              922.5574340820312
+            ],
+            [
+              1297.112060546875,
+              1005.0770874023438
+            ]
+          ],
+          "bbox": [
+            1244.0,
+            926.0,
+            1307.0,
+            1004.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.4523015343562375,
+          "white_fraction": 0.4523015343562375,
+          "yellow_fraction": 0.34122748498999333,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.2519318838072586,
+            "yellow_score": 0.1371550171911279
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.3857448399066925,
+          "angle_deg": 50.08976063963395,
+          "endpoints": [
+            [
+              1507.276123046875,
+              934.6055297851562
+            ],
+            [
+              1634.205322265625,
+              1086.3560791015625
+            ]
+          ],
+          "bbox": [
+            1508.0,
+            934.0,
+            1643.0,
+            1079.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.4575932947515466,
+          "white_fraction": 0.4575932947515466,
+          "yellow_fraction": 0.18379564957094394,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.23083106704135065,
+            "yellow_score": 0.06207251080797476
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.3089933693408966,
+          "angle_deg": 127.27161304504833,
+          "endpoints": [
+            [
+              835.564697265625,
+              443.3416442871094
+            ],
+            [
+              653.2301025390625,
+              682.9361572265625
+            ]
+          ],
+          "bbox": [
+            652.0,
+            449.0,
+            843.0,
+            684.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7270696142991533,
+          "white_fraction": 0.7270696142991533,
+          "yellow_fraction": 0.003292568203198495,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.27095782618167147,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "31.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.7388177514076233,
+          "angle_deg": 138.65706725676614,
+          "endpoints": [
+            [
+              279.4606628417969,
+              881.9773559570312
+            ],
+            [
+              72.52462005615234,
+              1064.050048828125
+            ]
+          ],
+          "bbox": [
+            76.0,
+            886.0,
+            283.0,
+            1068.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.5727788279773157,
+          "white_fraction": 0.0,
+          "yellow_fraction": 0.5727788279773157,
+          "count_constraint": {
+            "target_class": "yellow_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.5340018284512378
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.5516071915626526,
+          "angle_deg": 81.65037796083679,
+          "endpoints": [
+            [
+              986.3280029296875,
+              901.9518432617188
+            ],
+            [
+              988.833740234375,
+              919.0244140625
+            ]
+          ],
+          "bbox": [
+            986.0,
+            902.0,
+            989.0,
+            919.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 1.0,
+          "white_fraction": 1.0,
+          "yellow_fraction": 0.0,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.6343482702970504,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.1485998034477234,
+          "angle_deg": 73.42378201176089,
+          "endpoints": [
+            [
+              958.9608764648438,
+              806.11865234375
+            ],
+            [
+              1018.6061401367188,
+              1006.49853515625
+            ]
+          ],
+          "bbox": [
+            956.0,
+            807.0,
+            1035.0,
+            1004.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8646032178892827,
+          "white_fraction": 0.8646032178892827,
+          "yellow_fraction": 0.13635124079629124,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.14975675037666597,
+            "yellow_score": 0.013837774170251253
+          }
+        }
+      ]
+    },
+    "32.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.8588756322860718,
+          "angle_deg": 49.924825533151505,
+          "endpoints": [
+            [
+              1069.5028076171875,
+              550.7356567382812
+            ],
+            [
+              1166.6712646484375,
+              666.228515625
+            ]
+          ],
+          "bbox": [
+            1068.0,
+            552.0,
+            1179.0,
+            671.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8381909547738694,
+          "white_fraction": 0.8381909547738694,
+          "yellow_fraction": 0.010301507537688442,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.8482907454107874,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.632099449634552,
+          "angle_deg": 129.70053815155842,
+          "endpoints": [
+            [
+              796.5703735351562,
+              688.3037719726562
+            ],
+            [
+              652.7058715820312,
+              861.5860595703125
+            ]
+          ],
+          "bbox": [
+            652.0,
+            687.0,
+            795.0,
+            861.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8043099152964623,
+          "white_fraction": 0.8043099152964623,
+          "yellow_fraction": 0.0666417538614848,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.6011125614427635,
+            "yellow_score": 0.01670402319880047
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.5020145177841187,
+          "angle_deg": 49.867561428038826,
+          "endpoints": [
+            [
+              1204.71142578125,
+              672.9115600585938
+            ],
+            [
+              1404.05419921875,
+              909.3668823242188
+            ]
+          ],
+          "bbox": [
+            1188.0,
+            687.0,
+            1395.0,
+            917.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8973765432098766,
+          "white_fraction": 0.8973765432098766,
+          "yellow_fraction": 0.09529320987654322,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.5234063015376895,
+            "yellow_score": 0.025313772173759377
+          }
+        }
+      ]
+    },
+    "33.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.7253493070602417,
+          "angle_deg": 57.113734981579434,
+          "endpoints": [
+            [
+              1302.099365234375,
+              828.642578125
+            ],
+            [
+              1374.23291015625,
+              940.2027587890625
+            ]
+          ],
+          "bbox": [
+            1300.0,
+            830.0,
+            1387.0,
+            941.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.5581632653061225,
+          "white_fraction": 0.5581632653061225,
+          "yellow_fraction": 0.04336734693877551,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.5120929100227599,
+            "yellow_score": 0.011213308165268021
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.6187900900840759,
+          "angle_deg": 49.81258479440372,
+          "endpoints": [
+            [
+              1416.005859375,
+              838.7525024414062
+            ],
+            [
+              1584.8165283203125,
+              1038.6019287109375
+            ]
+          ],
+          "bbox": [
+            1422.0,
+            832.0,
+            1595.0,
+            1030.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8051063829787234,
+          "white_fraction": 0.8051063829787234,
+          "yellow_fraction": 0.02,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.5903915746731961,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.44078540802001953,
+          "angle_deg": 52.65819104881611,
+          "endpoints": [
+            [
+              1440.1668701171875,
+              864.9244384765625
+            ],
+            [
+              1507.71240234375,
+              953.4564819335938
+            ]
+          ],
+          "bbox": [
+            1444.0,
+            862.0,
+            1507.0,
+            954.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9414945919370699,
+          "white_fraction": 0.9414945919370699,
+          "yellow_fraction": 0.011307767944936086,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.4808656741032558,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "34.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.6802055239677429,
+          "angle_deg": 51.50239007103758,
+          "endpoints": [
+            [
+              1225.6195068359375,
+              752.8933715820312
+            ],
+            [
+              1404.2174072265625,
+              977.4409790039062
+            ]
+          ],
+          "bbox": [
+            1228.0,
+            751.0,
+            1409.0,
+            980.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9473479948253558,
+          "white_fraction": 0.9473479948253558,
+          "yellow_fraction": 0.07438551099611902,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.743892296020997,
+            "yellow_score": 0.01837786852272485
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.2951112687587738,
+          "angle_deg": 138.13933189743918,
+          "endpoints": [
+            [
+              301.5169677734375,
+              935.880615234375
+            ],
+            [
+              185.69435119628906,
+              1039.658935546875
+            ]
+          ],
+          "bbox": [
+            186.0,
+            942.0,
+            307.0,
+            1042.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9732375979112271,
+          "white_fraction": 0.9732375979112271,
+          "yellow_fraction": 0.05842036553524804,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.33061804722741667,
+            "yellow_score": 0.002879839078292211
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.2709750533103943,
+          "angle_deg": 123.17171795791994,
+          "endpoints": [
+            [
+              856.7831420898438,
+              641.3214721679688
+            ],
+            [
+              698.2456665039062,
+              883.853271484375
+            ]
+          ],
+          "bbox": [
+            700.0,
+            648.0,
+            867.0,
+            885.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7310849393290507,
+          "white_fraction": 0.7310849393290507,
+          "yellow_fraction": 0.7282298358315489,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.22888543247634136,
+            "yellow_score": 0.18742682956621787
+          }
+        }
+      ]
+    },
+    "35.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.8610544800758362,
+          "angle_deg": 124.72063727492491,
+          "endpoints": [
+            [
+              818.2138061523438,
+              593.9114990234375
+            ],
+            [
+              670.19140625,
+              807.5185546875
+            ]
+          ],
+          "bbox": [
+            668.0,
+            600.0,
+            827.0,
+            806.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.5675012272950417,
+          "white_fraction": 0.5675012272950417,
+          "yellow_fraction": 0.00012272950417280314,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.6178023623828363,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.5873457193374634,
+          "angle_deg": 43.067981943037296,
+          "endpoints": [
+            [
+              1442.871337890625,
+              776.2073974609375
+            ],
+            [
+              1606.827880859375,
+              929.46337890625
+            ]
+          ],
+          "bbox": [
+            1444.0,
+            775.0,
+            1611.0,
+            925.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.5159873506676037,
+          "white_fraction": 0.5159873506676037,
+          "yellow_fraction": 0.007905832747716092,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.3909326466964067,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.5259615182876587,
+          "angle_deg": 121.3725046901695,
+          "endpoints": [
+            [
+              1234.9339599609375,
+              706.081787109375
+            ],
+            [
+              1180.077880859375,
+              796.0474853515625
+            ]
+          ],
+          "bbox": [
+            1180.0,
+            711.0,
+            1243.0,
+            796.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.49491392801251954,
+          "white_fraction": 0.49491392801251954,
+          "yellow_fraction": 0.003129890453834116,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.33911759864556396,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "36.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.7219337224960327,
+          "angle_deg": 49.752950434888405,
+          "endpoints": [
+            [
+              1341.2236328125,
+              773.9642333984375
+            ],
+            [
+              1544.5035400390625,
+              1014.1132202148438
+            ]
+          ],
+          "bbox": [
+            1340.0,
+            775.0,
+            1547.0,
+            1012.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8356431107547818,
+          "white_fraction": 0.8356431107547818,
+          "yellow_fraction": 0.00893368457221395,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.7112465235918279,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.06440970301628113,
+          "angle_deg": 13.867691128575421,
+          "endpoints": [
+            [
+              1491.6470947265625,
+              974.4293212890625
+            ],
+            [
+              1532.827880859375,
+              984.5958862304688
+            ]
+          ],
+          "bbox": [
+            1492.0,
+            973.0,
+            1531.0,
+            992.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9622302158273381,
+          "white_fraction": 0.9622302158273381,
+          "yellow_fraction": 0.007194244604316547,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.07161524892925357,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.05601689964532852,
+          "angle_deg": 90.0,
+          "endpoints": [
+            [
+              1051.5,
+              505.0
+            ],
+            [
+              1051.5,
+              575.0
+            ]
+          ],
+          "bbox": [
+            1036.0,
+            505.0,
+            1067.0,
+            575.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.04896626768226333,
+          "white_fraction": 0.0,
+          "yellow_fraction": 0.04896626768226333,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "yellow_lane",
+            "white_score": 0.0,
+            "yellow_score": 0.011145473449562916
+          }
+        }
+      ]
+    },
+    "37.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.6367529034614563,
+          "angle_deg": 87.81049347990934,
+          "endpoints": [
+            [
+              1014.3291015625,
+              655.2992553710938
+            ],
+            [
+              1021.6072998046875,
+              845.6649780273438
+            ]
+          ],
+          "bbox": [
+            996.0,
+            656.0,
+            1051.0,
+            845.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8619073131529601,
+          "white_fraction": 0.8619073131529601,
+          "yellow_fraction": 0.0,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.6443349196840285,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "yellow_lane",
+          "conf": 0.5583013296127319,
+          "angle_deg": 126.55649559595804,
+          "endpoints": [
+            [
+              626.2557373046875,
+              819.9651489257812
+            ],
+            [
+              506.0701904296875,
+              982.0520629882812
+            ]
+          ],
+          "bbox": [
+            506.0,
+            822.0,
+            629.0,
+            982.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8559225512528473,
+          "white_fraction": 0.8559225512528473,
+          "yellow_fraction": 0.5882687927107062,
+          "count_constraint": {
+            "target_class": "yellow_lane",
+            "source_class": "white_lane",
+            "white_score": 0.5451863353948929,
+            "yellow_score": 0.3045381142195645
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.32602328062057495,
+          "angle_deg": 124.63985847146236,
+          "endpoints": [
+            [
+              713.2903442382812,
+              701.81884765625
+            ],
+            [
+              595.6288452148438,
+              872.1253051757812
+            ]
+          ],
+          "bbox": [
+            594.0,
+            703.0,
+            715.0,
+            871.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9723756906077348,
+          "white_fraction": 0.9723756906077348,
+          "yellow_fraction": 0.5552486187845304,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.3568694059279083,
+            "yellow_score": 0.16517312062379405
+          }
+        }
+      ]
+    },
+    "4.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.5322583317756653,
+          "angle_deg": 100.5378722804661,
+          "endpoints": [
+            [
+              1033.2607421875,
+              709.1882934570312
+            ],
+            [
+              1003.2802124023438,
+              870.354248046875
+            ]
+          ],
+          "bbox": [
+            996.0,
+            711.0,
+            1043.0,
+            869.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.20869565217391303,
+          "white_fraction": 0.20869565217391303,
+          "yellow_fraction": 0.017608695652173913,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.19045013069264266,
+            "yellow_score": 0.003818374988825424
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.3864131271839142,
+          "angle_deg": 49.67305094965252,
+          "endpoints": [
+            [
+              1428.655517578125,
+              885.443603515625
+            ],
+            [
+              1581.2391357421875,
+              1065.1925048828125
+            ]
+          ],
+          "bbox": [
+            1428.0,
+            886.0,
+            1585.0,
+            1064.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.49193954659949624,
+          "white_fraction": 0.49193954659949624,
+          "yellow_fraction": 0.6214105793450881,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.2360478074030402,
+            "yellow_score": 0.23061661030055594
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.216719850897789,
+          "angle_deg": 51.323373678217465,
+          "endpoints": [
+            [
+              1260.615966796875,
+              678.5069580078125
+            ],
+            [
+              1398.226806640625,
+              850.4170532226562
+            ]
+          ],
+          "bbox": [
+            1260.0,
+            679.0,
+            1395.0,
+            853.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9572271386430679,
+          "white_fraction": 0.9572271386430679,
+          "yellow_fraction": 0.41002949852507375,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.23551502380750874,
+            "yellow_score": 0.07848902564594704
+          }
+        }
+      ]
+    },
+    "5.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.5480268001556396,
+          "angle_deg": 101.92997039717005,
+          "endpoints": [
+            [
+              844.7952880859375,
+              533.9988403320312
+            ],
+            [
+              817.3032836914062,
+              664.1204833984375
+            ]
+          ],
+          "bbox": [
+            812.0,
+            537.0,
+            859.0,
+            663.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.996777392166584,
+          "white_fraction": 0.996777392166584,
+          "yellow_fraction": 0.021318790282597918,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.6278805812987941,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.3644450306892395,
+          "angle_deg": 90.0,
+          "endpoints": [
+            [
+              903.5,
+              537.0
+            ],
+            [
+              903.5,
+              655.0
+            ]
+          ],
+          "bbox": [
+            884.0,
+            537.0,
+            923.0,
+            655.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.9975269784172662,
+          "white_fraction": 0.9975269784172662,
+          "yellow_fraction": 0.016636690647482015,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.4179073469043314,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.32617196440696716,
+          "angle_deg": 101.05383834959919,
+          "endpoints": [
+            [
+              779.2697143554688,
+              938.927001953125
+            ],
+            [
+              755.33740234375,
+              1061.433349609375
+            ]
+          ],
+          "bbox": [
+            748.0,
+            942.0,
+            795.0,
+            1060.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.6877996803409696,
+          "white_fraction": 0.6877996803409696,
+          "yellow_fraction": 0.03649440596696857,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.2726715949121376,
+            "yellow_score": 0.0006864034413465757
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.137787863612175,
+          "angle_deg": 58.12751916233163,
+          "endpoints": [
+            [
+              1332.49365234375,
+              988.6929931640625
+            ],
+            [
+              1389.3013916015625,
+              1080.05615234375
+            ]
+          ],
+          "bbox": [
+            1332.0,
+            989.0,
+            1391.0,
+            1079.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.4403166869671133,
+          "white_fraction": 0.4403166869671133,
+          "yellow_fraction": 0.23995127892813642,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.07968535644708974,
+            "yellow_score": 0.030028859314017553
+          }
+        }
+      ]
+    },
+    "6.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.40369632840156555,
+          "angle_deg": 72.4025901916702,
+          "endpoints": [
+            [
+              1122.92626953125,
+              457.7284851074219
+            ],
+            [
+              1215.4544677734375,
+              749.4600830078125
+            ]
+          ],
+          "bbox": [
+            1100.0,
+            465.0,
+            1219.0,
+            768.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.7468634686346863,
+          "white_fraction": 0.7468634686346863,
+          "yellow_fraction": 0.3878228782287823,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.3542323557647612,
+            "yellow_score": 0.14148737000583284
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.2963322103023529,
+          "angle_deg": 51.20440651018086,
+          "endpoints": [
+            [
+              1475.114013671875,
+              964.1044311523438
+            ],
+            [
+              1515.1365966796875,
+              1013.8902587890625
+            ]
+          ],
+          "bbox": [
+            1474.0,
+            963.0,
+            1515.0,
+            1014.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.5023923444976076,
+          "white_fraction": 0.5023923444976076,
+          "yellow_fraction": 0.14513556618819776,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.19117444827320854,
+            "yellow_score": 0.03556459142783422
+          }
+        }
+      ]
+    },
+    "7.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.3343486189842224,
+          "angle_deg": 49.007720613371774,
+          "endpoints": [
+            [
+              1162.299560546875,
+              514.477783203125
+            ],
+            [
+              1350.4613037109375,
+              730.9920043945312
+            ]
+          ],
+          "bbox": [
+            1164.0,
+            513.0,
+            1347.0,
+            734.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.6229826658696952,
+          "white_fraction": 0.6229826658696952,
+          "yellow_fraction": 0.752092050209205,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.24587263991545222,
+            "yellow_score": 0.24104626863722806
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.29439401626586914,
+          "angle_deg": 49.53551678413599,
+          "endpoints": [
+            [
+              1233.0731201171875,
+              592.4966430664062
+            ],
+            [
+              1420.166015625,
+              811.8294067382812
+            ]
+          ],
+          "bbox": [
+            1236.0,
+            590.0,
+            1427.0,
+            806.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.5215543412264724,
+          "white_fraction": 0.5215543412264724,
+          "yellow_fraction": 0.7923497267759563,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.18603842873680426,
+            "yellow_score": 0.22558589449200978
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.21336901187896729,
+          "angle_deg": 138.02646324101164,
+          "endpoints": [
+            [
+              736.8611450195312,
+              487.5155334472656
+            ],
+            [
+              559.5861206054688,
+              646.9865112304688
+            ]
+          ],
+          "bbox": [
+            556.0,
+            481.0,
+            731.0,
+            655.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.5435294117647059,
+          "white_fraction": 0.5435294117647059,
+          "yellow_fraction": 0.08415224913494809,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.1470799111849709,
+            "yellow_score": 0.012156865569546971
+          }
+        }
+      ]
+    },
+    "8.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.2672180235385895,
+          "angle_deg": 51.711775900985785,
+          "endpoints": [
+            [
+              1285.3275146484375,
+              711.6366577148438
+            ],
+            [
+              1480.2677001953125,
+              958.5780639648438
+            ]
+          ],
+          "bbox": [
+            1276.0,
+            719.0,
+            1481.0,
+            958.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 1.0,
+          "white_fraction": 1.0,
+          "yellow_fraction": 0.00031466331025802394,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.3072965228839855,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.14487428963184357,
+          "angle_deg": 51.87631153593623,
+          "endpoints": [
+            [
+              1221.5965576171875,
+              630.7470703125
+            ],
+            [
+              1477.6661376953125,
+              957.0468139648438
+            ]
+          ],
+          "bbox": [
+            1220.0,
+            632.0,
+            1479.0,
+            956.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 1.0,
+          "white_fraction": 1.0,
+          "yellow_fraction": 0.003265511178095956,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.16658177864600954,
+            "yellow_score": 0.0
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.08194742351770401,
+          "angle_deg": 52.060278200544104,
+          "endpoints": [
+            [
+              1188.9581298828125,
+              589.69384765625
+            ],
+            [
+              1408.3275146484375,
+              871.0834350585938
+            ]
+          ],
+          "bbox": [
+            1186.0,
+            592.0,
+            1411.0,
+            869.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 1.0,
+          "white_fraction": 1.0,
+          "yellow_fraction": 0.0003861003861003861,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.0942379550487666,
+            "yellow_score": 0.0
+          }
+        }
+      ]
+    },
+    "9.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "white_lane",
+          "conf": 0.5753129124641418,
+          "angle_deg": 60.07500313077134,
+          "endpoints": [
+            [
+              1218.08935546875,
+              834.4949340820312
+            ],
+            [
+              1295.08251953125,
+              968.2549438476562
+            ]
+          ],
+          "bbox": [
+            1212.0,
+            838.0,
+            1299.0,
+            968.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8277146912704045,
+          "white_fraction": 0.8277146912704045,
+          "yellow_fraction": 0.2748403122782115,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.5545859275677891,
+            "yellow_score": 0.13430943303312537
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.5400629043579102,
+          "angle_deg": 56.36708513124752,
+          "endpoints": [
+            [
+              1398.4775390625,
+              840.3432006835938
+            ],
+            [
+              1514.61865234375,
+              1014.931884765625
+            ]
+          ],
+          "bbox": [
+            1380.0,
+            838.0,
+            1547.0,
+            1020.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8204666457876605,
+          "white_fraction": 0.8204666457876605,
+          "yellow_fraction": 0.1786720952082681,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.5192883267732686,
+            "yellow_score": 0.07433899068324647
+          }
+        },
+        {
+          "class": "white_lane",
+          "conf": 0.4714033901691437,
+          "angle_deg": 136.16666399522265,
+          "endpoints": [
+            [
+              93.13873291015625,
+              983.2276611328125
+            ],
+            [
+              6.485202789306641,
+              1066.4222412109375
+            ]
+          ],
+          "bbox": [
+            4.0,
+            981.0,
+            91.0,
+            1068.0
+          ],
+          "source_class": "lane_line",
+          "color_score": 0.8258196721311475,
+          "white_fraction": 0.8258196721311475,
+          "yellow_fraction": 0.4187158469945355,
+          "count_constraint": {
+            "target_class": "white_lane",
+            "source_class": "white_lane",
+            "white_score": 0.4501354981468268,
+            "yellow_score": 0.1779193601352188
+          }
+        }
+      ]
+    }
+  },
+  "constraint_report": {
+    "1": {
+      "matched_gt": true,
+      "candidate_count": 11,
+      "kept_count": 3,
+      "dropped_count": 8,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane",
+        "2": "white_lane"
+      }
+    },
+    "10": {
+      "matched_gt": true,
+      "candidate_count": 3,
+      "kept_count": 1,
+      "dropped_count": 2,
+      "target_counts": {
+        "white_lane": 0,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 0,
+        "yellow_lane": 1
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "yellow_lane"
+      }
+    },
+    "11": {
+      "matched_gt": true,
+      "candidate_count": 3,
+      "kept_count": 1,
+      "dropped_count": 2,
+      "target_counts": {
+        "white_lane": 0,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 0,
+        "yellow_lane": 1
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "yellow_lane"
+      }
+    },
+    "12": {
+      "matched_gt": true,
+      "candidate_count": 9,
+      "kept_count": 1,
+      "dropped_count": 8,
+      "target_counts": {
+        "white_lane": 0,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 0,
+        "yellow_lane": 1
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "yellow_lane"
+      }
+    },
+    "13": {
+      "matched_gt": true,
+      "candidate_count": 0,
+      "kept_count": 0,
+      "dropped_count": 0,
+      "target_counts": {
+        "white_lane": 1,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 1,
+        "yellow_lane": 1
+      },
+      "assignments": {}
+    },
+    "14": {
+      "matched_gt": true,
+      "candidate_count": 4,
+      "kept_count": 2,
+      "dropped_count": 2,
+      "target_counts": {
+        "white_lane": 1,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 1,
+        "yellow_lane": 1
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "1": "white_lane",
+        "0": "yellow_lane"
+      }
+    },
+    "15": {
+      "matched_gt": true,
+      "candidate_count": 5,
+      "kept_count": 2,
+      "dropped_count": 3,
+      "target_counts": {
+        "white_lane": 1,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 1,
+        "yellow_lane": 1
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "3": "white_lane",
+        "0": "yellow_lane"
+      }
+    },
+    "16": {
+      "matched_gt": true,
+      "candidate_count": 3,
+      "kept_count": 1,
+      "dropped_count": 2,
+      "target_counts": {
+        "white_lane": 0,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 0,
+        "yellow_lane": 1
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "1": "yellow_lane"
+      }
+    },
+    "17": {
+      "matched_gt": true,
+      "candidate_count": 14,
+      "kept_count": 5,
+      "dropped_count": 9,
+      "target_counts": {
+        "white_lane": 5,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 5,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "1": "white_lane",
+        "3": "white_lane",
+        "4": "white_lane",
+        "5": "white_lane",
+        "0": "white_lane"
+      }
+    },
+    "18": {
+      "matched_gt": true,
+      "candidate_count": 5,
+      "kept_count": 5,
+      "dropped_count": 0,
+      "target_counts": {
+        "white_lane": 5,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 5,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "4": "white_lane",
+        "1": "white_lane",
+        "2": "white_lane",
+        "3": "white_lane"
+      }
+    },
+    "19": {
+      "matched_gt": true,
+      "candidate_count": 5,
+      "kept_count": 5,
+      "dropped_count": 0,
+      "target_counts": {
+        "white_lane": 4,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 4,
+        "yellow_lane": 1
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "yellow_lane",
+        "1": "white_lane",
+        "2": "white_lane",
+        "3": "white_lane",
+        "4": "white_lane"
+      }
+    },
+    "2": {
+      "matched_gt": true,
+      "candidate_count": 8,
+      "kept_count": 3,
+      "dropped_count": 5,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane",
+        "2": "white_lane"
+      }
+    },
+    "20": {
+      "matched_gt": true,
+      "candidate_count": 15,
+      "kept_count": 4,
+      "dropped_count": 11,
+      "target_counts": {
+        "white_lane": 4,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 4,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "2": "white_lane",
+        "1": "white_lane",
+        "3": "white_lane"
+      }
+    },
+    "21": {
+      "matched_gt": true,
+      "candidate_count": 4,
+      "kept_count": 3,
+      "dropped_count": 1,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane",
+        "2": "white_lane"
+      }
+    },
+    "22": {
+      "matched_gt": true,
+      "candidate_count": 4,
+      "kept_count": 4,
+      "dropped_count": 0,
+      "target_counts": {
+        "white_lane": 4,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 1
+      },
+      "shortage": {
+        "white_lane": 1,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "2": "yellow_lane",
+        "0": "white_lane",
+        "1": "white_lane",
+        "3": "white_lane"
+      }
+    },
+    "23": {
+      "matched_gt": true,
+      "candidate_count": 2,
+      "kept_count": 2,
+      "dropped_count": 0,
+      "target_counts": {
+        "white_lane": 2,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 1,
+        "yellow_lane": 1
+      },
+      "shortage": {
+        "white_lane": 1,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "yellow_lane",
+        "1": "white_lane"
+      }
+    },
+    "24": {
+      "matched_gt": true,
+      "candidate_count": 1,
+      "kept_count": 1,
+      "dropped_count": 0,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 1,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 2,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane"
+      }
+    },
+    "25": {
+      "matched_gt": true,
+      "candidate_count": 11,
+      "kept_count": 5,
+      "dropped_count": 6,
+      "target_counts": {
+        "white_lane": 5,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 5,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "2": "white_lane",
+        "5": "white_lane",
+        "3": "white_lane",
+        "10": "white_lane"
+      }
+    },
+    "26": {
+      "matched_gt": true,
+      "candidate_count": 2,
+      "kept_count": 2,
+      "dropped_count": 0,
+      "target_counts": {
+        "white_lane": 5,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 2,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane"
+      }
+    },
+    "27": {
+      "matched_gt": true,
+      "candidate_count": 8,
+      "kept_count": 3,
+      "dropped_count": 5,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "1": "white_lane",
+        "4": "white_lane",
+        "2": "white_lane"
+      }
+    },
+    "28": {
+      "matched_gt": true,
+      "candidate_count": 2,
+      "kept_count": 2,
+      "dropped_count": 0,
+      "target_counts": {
+        "white_lane": 4,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 2,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 2,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane"
+      }
+    },
+    "29": {
+      "matched_gt": true,
+      "candidate_count": 14,
+      "kept_count": 3,
+      "dropped_count": 11,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "2": "white_lane",
+        "3": "white_lane",
+        "0": "white_lane"
+      }
+    },
+    "3": {
+      "matched_gt": true,
+      "candidate_count": 3,
+      "kept_count": 3,
+      "dropped_count": 0,
+      "target_counts": {
+        "white_lane": 5,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 2,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane",
+        "2": "white_lane"
+      }
+    },
+    "30": {
+      "matched_gt": true,
+      "candidate_count": 6,
+      "kept_count": 4,
+      "dropped_count": 2,
+      "target_counts": {
+        "white_lane": 4,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 4,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "3": "white_lane",
+        "1": "white_lane",
+        "2": "white_lane"
+      }
+    },
+    "31": {
+      "matched_gt": true,
+      "candidate_count": 6,
+      "kept_count": 3,
+      "dropped_count": 3,
+      "target_counts": {
+        "white_lane": 2,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 2,
+        "yellow_lane": 1
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "yellow_lane",
+        "2": "white_lane",
+        "4": "white_lane"
+      }
+    },
+    "32": {
+      "matched_gt": true,
+      "candidate_count": 10,
+      "kept_count": 3,
+      "dropped_count": 7,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane",
+        "2": "white_lane"
+      }
+    },
+    "33": {
+      "matched_gt": true,
+      "candidate_count": 7,
+      "kept_count": 3,
+      "dropped_count": 4,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "1": "white_lane",
+        "0": "white_lane",
+        "4": "white_lane"
+      }
+    },
+    "34": {
+      "matched_gt": true,
+      "candidate_count": 11,
+      "kept_count": 3,
+      "dropped_count": 8,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "3": "white_lane",
+        "4": "white_lane"
+      }
+    },
+    "35": {
+      "matched_gt": true,
+      "candidate_count": 6,
+      "kept_count": 3,
+      "dropped_count": 3,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane",
+        "2": "white_lane"
+      }
+    },
+    "36": {
+      "matched_gt": true,
+      "candidate_count": 3,
+      "kept_count": 3,
+      "dropped_count": 0,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane",
+        "2": "white_lane"
+      }
+    },
+    "37": {
+      "matched_gt": true,
+      "candidate_count": 10,
+      "kept_count": 3,
+      "dropped_count": 7,
+      "target_counts": {
+        "white_lane": 2,
+        "yellow_lane": 1
+      },
+      "pred_counts": {
+        "white_lane": 2,
+        "yellow_lane": 1
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "1": "yellow_lane",
+        "0": "white_lane",
+        "4": "white_lane"
+      }
+    },
+    "4": {
+      "matched_gt": true,
+      "candidate_count": 10,
+      "kept_count": 3,
+      "dropped_count": 7,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "1": "white_lane",
+        "2": "white_lane",
+        "0": "white_lane"
+      }
+    },
+    "5": {
+      "matched_gt": true,
+      "candidate_count": 6,
+      "kept_count": 4,
+      "dropped_count": 2,
+      "target_counts": {
+        "white_lane": 4,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 4,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane",
+        "2": "white_lane",
+        "4": "white_lane"
+      }
+    },
+    "6": {
+      "matched_gt": true,
+      "candidate_count": 2,
+      "kept_count": 2,
+      "dropped_count": 0,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 2,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 1,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane"
+      }
+    },
+    "7": {
+      "matched_gt": true,
+      "candidate_count": 6,
+      "kept_count": 3,
+      "dropped_count": 3,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane",
+        "3": "white_lane"
+      }
+    },
+    "8": {
+      "matched_gt": true,
+      "candidate_count": 15,
+      "kept_count": 3,
+      "dropped_count": 12,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "4": "white_lane",
+        "6": "white_lane",
+        "11": "white_lane"
+      }
+    },
+    "9": {
+      "matched_gt": true,
+      "candidate_count": 12,
+      "kept_count": 3,
+      "dropped_count": 9,
+      "target_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "pred_counts": {
+        "white_lane": 3,
+        "yellow_lane": 0
+      },
+      "shortage": {
+        "white_lane": 0,
+        "yellow_lane": 0
+      },
+      "assignments": {
+        "0": "white_lane",
+        "1": "white_lane",
+        "2": "white_lane"
+      }
+    }
+  }
+}
