@@ -79,13 +79,15 @@ python -m src.train_yolo \
 
 ## 4. 推理并分白/黄
 
-推理默认使用 HSV 后处理分白线/黄线：
+推理默认使用 HSV 后处理分白线/黄线。建议先用较低置信度保留更多候选线，后面再用 Excel 数量标注筛选：
 
 ```bash
 python -m src.predict_yolo_lane \
   --weights runs/segment/local_colm_lane_line/weights/best.pt \
   --source datasets/local_colm/images/test \
   --out predictions.json \
+  --conf 0.05 \
+  --max-det 100 \
   --counts-out prediction_counts.csv \
   --save-vis runs/lane_vis
 ```
@@ -96,13 +98,27 @@ python -m src.predict_yolo_lane \
 - `prediction_counts.csv`：每张图的车道线数、白线数、黄线数
 - `runs/lane_vis/`：可视化结果
 
-## 5. 用 Excel 数量 GT 统计
+## 5. 用 Excel 数量标注约束白/黄结果
+
+`结果统计.xlsx` 是每张图的白线/黄线数量标注。可以把它作为弱监督后处理：每张图按标注数量选择最像白线的 K 条、最像黄线的 K 条，丢掉多余候选。
+
+```bash
+python -m src.apply_count_constraints \
+  --pred predictions.json \
+  --gt-xlsx 结果统计.xlsx \
+  --out predictions_count_constrained.json \
+  --counts-out prediction_counts_constrained.csv
+```
+
+注意：这个结果使用了测试集数量标注，应该描述为“数量标注约束后的后处理结果”，不要说成完全无监督的原始模型性能。
+
+## 6. 用 Excel 数量 GT 统计
 
 当前 `结果统计.xlsx` 只有每张图的数量，没有逐条线坐标，所以只能做数量级统计，不能验证“15 度以内算准确”。
 
 ```bash
 python -m src.evaluate_lane_metrics \
-  --pred predictions.json \
+  --pred predictions_count_constrained.json \
   --gt-xlsx 结果统计.xlsx \
   --count-only \
   --out metrics_count_only.json
@@ -112,13 +128,13 @@ python -m src.evaluate_lane_metrics \
 
 ```bash
 python -m src.evaluate_lane_metrics \
-  --pred predictions.json \
+  --pred predictions_count_constrained.json \
   --gt-counts datasets/local_colm/gt_counts.json \
   --count-only \
   --out metrics_count_only.json
 ```
 
-## 6. 有逐条 GT 时做 15 度评估
+## 7. 有逐条 GT 时做 15 度评估
 
 如果测试集补充了逐条车道线的 YOLO 分割标签，并且 GT 标签里仍区分白/黄线，可以运行：
 
@@ -134,7 +150,7 @@ python -m src.evaluate_lane_metrics \
 
 这个模式会拟合预测线和 GT 线的角度，并按白线/黄线类别分别匹配。
 
-## 7. 报告写法
+## 8. 报告写法
 
 可以这样描述方法：
 
