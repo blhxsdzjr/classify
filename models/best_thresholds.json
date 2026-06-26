@@ -1,0 +1,5 @@
+{
+  "white_threshold": 0.35,
+  "yellow_threshold": 0.49999999999999994,
+  "val_best_f1_sum": 0.3466975213904401
+}
