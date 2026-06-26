@@ -26,7 +26,7 @@ IMG_SIZE = 512          # resize shorter side to this
 NUM_CLASSES = 3         # 0=bg, 1=white_lane, 2=yellow_lane
 LINE_THICKNESS = 10     # cv2.line thickness for mask rendering
 BATCH_SIZE = 4
-EPOCHS = 80
+EPOCHS = 120
 LR = 1e-3
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -266,15 +266,45 @@ def train(args):
     mask_dir = "datasets/local_colm/masks"
     make_masks(args.image_dir, args.gt_dir, mask_dir)
 
-    # ── Split ──
-    stems = sorted(Path(mask_dir).glob("*.png"))
-    stems = [p.stem for p in stems]
+    # ── Split with yellow oversampling ──
+    stems_all = sorted(Path(mask_dir).glob("*.png"))
+    stems_all = [p.stem for p in stems_all]
+
+    # Identify images containing yellow lanes
+    yellow_stems = []
+    white_only_stems = []
+    for s in stems_all:
+        mask = cv2.imread(str(Path(mask_dir) / f"{s}.png"), cv2.IMREAD_GRAYSCALE)
+        if (mask == 2).sum() > 50:  # yellow class
+            yellow_stems.append(s)
+        else:
+            white_only_stems.append(s)
+
     random.seed(42)
-    random.shuffle(stems)
-    n_train = max(1, int(len(stems) * 0.75))
-    train_stems = stems[:n_train]
-    val_stems = stems[n_train:]
-    print(f"Train: {len(train_stems)}, Val: {len(val_stems)}")
+    random.shuffle(yellow_stems)
+    random.shuffle(white_only_stems)
+
+    # Split: keep yellow images in both train and val
+    n_yellow_val = max(1, int(len(yellow_stems) * 0.25))
+    yellow_train = yellow_stems[n_yellow_val:]
+    yellow_val = yellow_stems[:n_yellow_val]
+
+    n_white_val = max(2, int(len(white_only_stems) * 0.25))
+    white_train = white_only_stems[n_white_val:]
+    white_val = white_only_stems[:n_white_val]
+
+    train_stems = white_train + yellow_train * 4  # oversample yellow 4x
+    val_stems = white_val + yellow_val
+
+    # Ensure yellow_stems isn't empty
+    if not yellow_train:
+        # Put all yellow in train if too few
+        train_stems = white_train + yellow_stems * 8
+        val_stems = white_val
+
+    random.shuffle(train_stems)
+    print(f"Train: {len(train_stems)} (white={len(white_train)}, yellow_x4={len(yellow_train)*4 if yellow_train else len(yellow_stems)*8})")
+    print(f"Val: {len(val_stems)} (white={len(white_val)}, yellow={len(yellow_val)})")
 
     train_ds = LaneMaskDataset(args.image_dir, mask_dir, train_stems, augment=True)
     val_ds = LaneMaskDataset(args.image_dir, mask_dir, val_stems, augment=False)
@@ -286,8 +316,8 @@ def train(args):
     opt = torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, EPOCHS)
 
-    # Class weights (bg is dominant)
-    class_weight = torch.tensor([0.3, 1.5, 2.0], device=DEVICE)
+    # Class weights — yellow heavily upweighted due to extreme imbalance (102W:10Y)
+    class_weight = torch.tensor([0.2, 1.0, 8.0], device=DEVICE)
 
     best_val = float("inf")
     best_state = None
@@ -331,9 +361,11 @@ def train(args):
 
         tl = np.mean(train_losses)
         vl = np.mean(val_losses)
-        miou = np.mean([np.mean(io) for io in all_ious])
-        mdice = np.mean([np.mean(di) for di in all_dices])
-        print(f"  epoch={epoch:03d}  train_loss={tl:.4f}  val_loss={vl:.4f}  mIoU={miou:.4f}  mDice={mdice:.4f}")
+        avg_ious = np.array(all_ious).mean(axis=0)
+        avg_dices = np.array(all_dices).mean(axis=0)
+        print(f"  epoch={epoch:03d}  train_loss={tl:.4f}  val_loss={vl:.4f}")
+        print(f"    IoU:  bg={avg_ious[0]:.3f}  white={avg_ious[1]:.3f}  yellow={avg_ious[2]:.3f}  mean={avg_ious.mean():.3f}")
+        print(f"    Dice: bg={avg_dices[0]:.3f}  white={avg_dices[1]:.3f}  yellow={avg_dices[2]:.3f}  mean={avg_dices.mean():.3f}")
 
         if vl < best_val:
             best_val = vl
