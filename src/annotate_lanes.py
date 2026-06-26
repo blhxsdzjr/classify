@@ -1,128 +1,93 @@
 #!/usr/bin/env python3
-"""OpenCV manual lane-line annotation tool.
+"""Matplotlib-based manual lane-line annotation tool (works over SSH X11 forwarding).
 
-Draw lane lines with mouse, label as white/yellow, save as YOLO segmentation format.
-Each line = a polygon (list of clicked points + the line segment).
+Draw lane lines with mouse clicks. Each lane = click start + end points.
 
 Controls:
-  LEFT CLICK       — add point to current line
-  RIGHT CLICK      — finish current line
-  w / y            — set current line class to white_lane / yellow_lane
-  1 / 2            — same as w / y
-  BACKSPACE / DEL  — delete last point
-  d                — delete last finished line
-  n / p            — next / previous image
-  s                — save annotations for current image
-  q / ESC          — quit (auto-saves current image)
+  LEFT CLICK     — add point (first click = line start, second click = line end)
+  w / y key      — switch to white_lane / yellow_lane class
+  d key          — delete last line
+  n / p key      — next / previous image
+  s key          — save current image annotations
+  q / ESC        — quit (auto-saves)
 
-Display:
-  white_lane lines  — green
-  yellow_lane lines — blue/cyan
-  current line      — red dots + yellow line preview
-  top-left          — image name, current class, line count
+Lines saved as YOLO segmentation format in --label-dir.
+X11 forwarding required: ssh -X user@host
 """
 
 import argparse
 import json
 from pathlib import Path
 
-import cv2
+import matplotlib
+matplotlib.use("TkAgg")  # Try TkAgg first (most common over X11)
+import matplotlib.pyplot as plt
 import numpy as np
 
-CLASS_COLORS = {"white_lane": (0, 255, 0), "yellow_lane": (255, 180, 0)}
-CURRENT_COLOR = (0, 0, 255)  # red dots for active line
-PREVIEW_COLOR = (0, 255, 255)  # yellow line preview
+CLASS_COLORS = {"white_lane": "lime", "yellow_lane": "gold"}
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="Manual lane-line annotation with OpenCV.")
+    p = argparse.ArgumentParser(description="Manual lane-line annotation (matplotlib).")
     p.add_argument("--image-dir", default="datasets/local_colm/images/test")
     p.add_argument("--label-dir", default="datasets/local_colm/labels/test")
-    p.add_argument("--start", type=int, default=0, help="Start image index (0-based).")
+    p.add_argument("--start", type=int, default=0)
     return p.parse_args()
 
 
-def yolo_polygon_str(points, w, h):
-    """Convert pixel points to YOLO segmentation format string."""
-    if len(points) < 2:
+def yolo_polygon_str(pts, w, h):
+    """Pixel points → YOLO segmentation format string."""
+    if len(pts) < 2:
         return None
-    # YOLO format: class_id x1 y1 x2 y2 ... xn yn  (normalized)
     norm = []
-    for px, py in points:
+    for px, py in pts:
         norm.append(f"{px / w:.6f}")
         norm.append(f"{py / h:.6f}")
-    # Use last two points as the main line endpoints for the label
     return " ".join(norm)
 
 
-def draw_annotations(img, lines):
-    """Draw all saved lines on the image."""
-    vis = img.copy()
-    for cls, pts in lines:
-        color = CLASS_COLORS.get(cls, (255, 255, 255))
-        # Draw line segments
-        for i in range(len(pts) - 1):
-            cv2.line(vis, tuple(pts[i]), tuple(pts[i + 1]), color, 3, cv2.LINE_AA)
-        # Draw endpoints as circles
-        for pt in pts[:1] + pts[-1:]:
-            cv2.circle(vis, tuple(pt), 5, color, -1, cv2.LINE_AA)
-        # Class label near first point
-        cv2.putText(vis, cls, (pts[0][0] + 8, pts[0][1] - 5),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
-    return vis
-
-
 def save_labels(label_dir, stem, lines, w, h):
-    """Save lines as YOLO segmentation format .txt file."""
     label_dir.mkdir(parents=True, exist_ok=True)
     yolo_lines = []
     for cls, pts in lines:
         cls_id = 0 if cls == "white_lane" else 1
-        poly_str = yolo_polygon_str(pts, w, h)
-        if poly_str:
-            yolo_lines.append(f"{cls_id} {poly_str}")
-    label_path = label_dir / f"{stem}.txt"
-    label_path.write_text("\n".join(yolo_lines) + ("\n" if yolo_lines else ""), encoding="utf-8")
+        s = yolo_polygon_str(pts, w, h)
+        if s:
+            yolo_lines.append(f"{cls_id} {s}")
+    (label_dir / f"{stem}.txt").write_text("\n".join(yolo_lines) + ("\n" if yolo_lines else ""), encoding="utf-8")
 
 
-def get_image_files(image_dir):
+def get_files(d):
     exts = {".jpg", ".jpeg", ".png", ".bmp"}
-    files = sorted(p for p in Path(image_dir).rglob("*") if p.suffix.lower() in exts)
-    return files
+    return sorted(p for p in Path(d).rglob("*") if p.suffix.lower() in exts)
 
 
-def main():
-    args = parse_args()
-    image_dir = Path(args.image_dir)
-    label_dir = Path(args.label_dir)
-    files = get_image_files(image_dir)
+class Annotator:
+    def __init__(self, image_dir, label_dir, start=0):
+        self.image_dir = Path(image_dir)
+        self.label_dir = Path(label_dir)
+        self.files = get_files(image_dir)
+        self.idx = max(0, min(start, len(self.files) - 1))
+        self.current_cls = "white_lane"
+        self.current_pt = None   # first point of current line (waiting for second)
+        self.saved_lines = []    # [(cls, [(x1,y1),(x2,y2),...]), ...]
 
-    if not files:
-        print(f"No images found in {image_dir}")
-        return
+        self.fig, self.ax = plt.subplots(figsize=(14, 8))
+        self.fig.canvas.manager.set_window_title("Lane Annotation")
+        self.load_image()
+        self.setup_callbacks()
+        self.redraw()
 
-    print(f"Found {len(files)} images.")
-    print("Controls: LEFT=add point | RIGHT=finish line | w/y=white/yellow | d=delete line")
-    print("          n/p=next/prev | s=save | DEL=delete point | q=quit")
-    print()
+    def load_image(self):
+        path = str(self.files[self.idx])
+        self.img = plt.imread(path)
+        # BGR→RGB if needed (cv2 images are BGR, but plt.imread loads correctly)
+        self.h, self.w = self.img.shape[:2]
+        self.stem = self.files[self.idx].stem
 
-    cv2.namedWindow("Lane Annotation", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("Lane Annotation", 1280, 720)
-
-    idx = max(0, min(args.start, len(files) - 1))
-    current_cls = "white_lane"
-    current_points = []  # active line being drawn
-    saved_lines = []     # finished lines: [(cls, [(x,y),...]), ...]
-
-    def load_image(index):
-        nonlocal current_points, saved_lines
-        img = cv2.imread(str(files[index]))
-        if img is None:
-            return None, None, None
-        stem = files[index].stem
-        # Load existing labels if any
-        label_path = label_dir / f"{stem}.txt"
-        saved_lines = []
+        # Load existing labels
+        label_path = self.label_dir / f"{self.stem}.txt"
+        self.saved_lines = []
         if label_path.exists():
             for line in label_path.read_text().strip().splitlines():
                 if not line.strip():
@@ -131,92 +96,102 @@ def main():
                 cls_id = int(float(parts[0]))
                 cls = "white_lane" if cls_id == 0 else "yellow_lane"
                 coords = [float(x) for x in parts[1:]]
-                # Group into (x,y) pairs, convert from normalized to pixel
-                h, w = img.shape[:2]
-                pts = [(int(coords[i] * w), int(coords[i + 1] * h)) for i in range(0, len(coords), 2)]
+                pts = [(int(coords[i] * self.w), int(coords[i + 1] * self.h))
+                       for i in range(0, len(coords), 2)]
                 if len(pts) >= 2:
-                    saved_lines.append((cls, pts))
-        current_points = []
-        return img, stem, img.shape[:2]
+                    self.saved_lines.append((cls, pts))
+        self.current_pt = None
+        print(f"Loaded {self.stem}.jpg ({len(self.saved_lines)} existing lines)")
 
-    img, stem, (h, w) = load_image(idx)
-    if img is None:
-        print(f"Cannot load {files[idx]}")
+    def redraw(self):
+        self.ax.clear()
+        self.ax.imshow(self.img)
+
+        # Draw saved lines
+        for cls, pts in self.saved_lines:
+            color = CLASS_COLORS.get(cls, "white")
+            xs, ys = zip(*pts)
+            self.ax.plot(xs, ys, color=color, linewidth=3, marker="o", markersize=5)
+            self.ax.text(xs[0] + 8, ys[0] - 5, cls, color=color, fontsize=9, weight="bold")
+
+        # Draw current first point
+        if self.current_pt is not None:
+            self.ax.plot(self.current_pt[0], self.current_pt[1], "ro", markersize=8)
+
+        # Title
+        title = (f"[{self.idx + 1}/{len(self.files)}] {self.stem}.jpg | "
+                 f"Class: {self.current_cls} | Lines: {len(self.saved_lines)} | "
+                 f"n/p=nav w/y=class s=save d=del q=quit")
+        self.ax.set_title(title, fontsize=11)
+        self.ax.axis("off")
+        self.fig.canvas.draw()
+
+    def setup_callbacks(self):
+        def on_click(event):
+            if event.inaxes != self.ax or event.xdata is None:
+                return
+            x, y = int(round(event.xdata)), int(round(event.ydata))
+            x = max(0, min(self.w - 1, x))
+            y = max(0, min(self.h - 1, y))
+
+            if self.current_pt is None:
+                # First click: set line start
+                self.current_pt = (x, y)
+            else:
+                # Second click: finish line
+                pts = [self.current_pt, (x, y)]
+                self.saved_lines.append((self.current_cls, pts))
+                self.current_pt = None
+            self.redraw()
+
+        def on_key(event):
+            if event.key in ("w", "1"):
+                self.current_cls = "white_lane"
+            elif event.key in ("y", "2"):
+                self.current_cls = "yellow_lane"
+            elif event.key == "d":
+                if self.saved_lines:
+                    self.saved_lines.pop()
+                elif self.current_pt:
+                    self.current_pt = None
+            elif event.key == "n":
+                save_labels(self.label_dir, self.stem, self.saved_lines, self.w, self.h)
+                self.idx = (self.idx + 1) % len(self.files)
+                self.load_image()
+            elif event.key == "p":
+                save_labels(self.label_dir, self.stem, self.saved_lines, self.w, self.h)
+                self.idx = (self.idx - 1) % len(self.files)
+                self.load_image()
+            elif event.key == "s":
+                save_labels(self.label_dir, self.stem, self.saved_lines, self.w, self.h)
+                print(f"  Saved {self.stem}.jpg: {len(self.saved_lines)} lines")
+            elif event.key in ("q", "escape"):
+                save_labels(self.label_dir, self.stem, self.saved_lines, self.w, self.h)
+                print(f"Saved. Quit.")
+                plt.close()
+                return
+            elif event.key == "backspace":
+                if self.current_pt:
+                    self.current_pt = None
+            self.redraw()
+
+        self.fig.canvas.mpl_connect("button_press_event", on_click)
+        self.fig.canvas.mpl_connect("key_press_event", on_key)
+
+
+def main():
+    args = parse_args()
+    if not get_files(args.image_dir):
+        print(f"No images in {args.image_dir}")
         return
 
-    while True:
-        vis = draw_annotations(img, saved_lines)
+    print(f"Found {len(get_files(args.image_dir))} images.")
+    print("LEFT click = start/end line | w/y = class | d = delete | n/p = nav | s = save | q = quit")
+    print("NOTE: needs X11 forwarding: ssh -X user@host")
+    print()
 
-        # Draw current line in progress
-        for i, pt in enumerate(current_points):
-            cv2.circle(vis, pt, 4, CURRENT_COLOR, -1, cv2.LINE_AA)
-        if len(current_points) >= 2:
-            for i in range(len(current_points) - 1):
-                cv2.line(vis, current_points[i], current_points[i + 1], PREVIEW_COLOR, 2, cv2.LINE_AA)
-
-        # Status text
-        info_lines = [
-            f"Image {idx + 1}/{len(files)}: {stem}.jpg",
-            f"Class: {current_cls} (w=white, y=yellow)",
-            f"Lines: {len(saved_lines)} | Points: {len(current_points)}",
-            f"n/p=nav | s=save | q=quit | d=del line | DEL=del pt",
-        ]
-        for i, text in enumerate(info_lines):
-            cv2.putText(vis, text, (10, 25 + i * 22), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.6, (255, 255, 255), 2, cv2.LINE_AA)
-
-        cv2.imshow("Lane Annotation", vis)
-        key = cv2.waitKey(1) & 0xFF
-
-        # --- Mouse callback ---
-        def on_mouse(event, x, y, flags, param):
-            nonlocal current_points, current_cls, saved_lines
-            if event == cv2.EVENT_LBUTTONDOWN:
-                current_points.append((x, y))
-            elif event == cv2.EVENT_RBUTTONDOWN:
-                if len(current_points) >= 2:
-                    saved_lines.append((current_cls, current_points.copy()))
-                    current_points = []
-
-        cv2.setMouseCallback("Lane Annotation", on_mouse)
-
-        # --- Keyboard ---
-        if key == ord("q") or key == 27:  # q or ESC
-            save_labels(label_dir, stem, saved_lines, w, h)
-            print(f"Saved {stem}.jpg ({len(saved_lines)} lines). Quit.")
-            break
-
-        elif key == ord("s"):
-            save_labels(label_dir, stem, saved_lines, w, h)
-            print(f"Saved {stem}.jpg ({len(saved_lines)} lines)")
-
-        elif key == ord("w") or key == ord("1"):
-            current_cls = "white_lane"
-        elif key == ord("y") or key == ord("2"):
-            current_cls = "yellow_lane"
-
-        elif key == ord("d"):
-            if saved_lines:
-                removed = saved_lines.pop()
-                print(f"Deleted line: {removed[0]} ({len(removed[1])} pts)")
-
-        elif key == 8 or key == 127:  # BACKSPACE or DEL
-            if current_points:
-                current_points.pop()
-
-        elif key == ord("n"):
-            save_labels(label_dir, stem, saved_lines, w, h)
-            idx = (idx + 1) % len(files)
-            img, stem, (h, w) = load_image(idx)
-            print(f"→ {stem}.jpg ({len(saved_lines)} lines loaded)")
-
-        elif key == ord("p"):
-            save_labels(label_dir, stem, saved_lines, w, h)
-            idx = (idx - 1) % len(files)
-            img, stem, (h, w) = load_image(idx)
-            print(f"← {stem}.jpg ({len(saved_lines)} lines loaded)")
-
-    cv2.destroyAllWindows()
+    Annotator(args.image_dir, args.label_dir, args.start)
+    plt.show()
 
 
 if __name__ == "__main__":
