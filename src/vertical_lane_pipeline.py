@@ -12,6 +12,7 @@ from xml.sax.saxutils import escape
 
 import cv2
 import numpy as np
+import torch
 
 from .classes import WHITE, YELLOW
 from .classical_lane import image_files
@@ -47,6 +48,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-vis", default="runs/vertical_lane_vis")
     parser.add_argument("--max-width", type=int, default=960)
     parser.add_argument("--conf-thr", type=float, default=0.08)
+    parser.add_argument("--color-model", default=None, help="Path to learned color classifier .pkl (logistic regression).")
     return parser.parse_args()
 
 
@@ -271,10 +273,90 @@ def limit_lane_counts(instances: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return selected
 
 
-def detect_image(image_bgr: np.ndarray, params: VerticalLaneParams) -> list[dict[str, Any]]:
+def _load_color_model(path: str):
+    import pickle
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
+
+class _ColorMLP(torch.nn.Module):
+    def __init__(self, in_dim=8):
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(in_dim, 32),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(0.3),
+            torch.nn.Linear(32, 16),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(0.2),
+            torch.nn.Linear(16, 2),
+        )
+    def forward(self, x):
+        return self.net(x)
+
+
+def _classify_with_model(fitted_line: np.ndarray, small_bgr: np.ndarray, model_data: dict, line_width: int) -> tuple[str, float, float]:
+    """Use learned classifier (LR or MLP) to predict white/yellow from line-region features."""
+    x1, y1, x2, y2 = [float(v) for v in fitted_line]
+    x1, y1 = np.clip(x1, 0, small_bgr.shape[1]-1), np.clip(y1, 0, small_bgr.shape[0]-1)
+    x2, y2 = np.clip(x2, 0, small_bgr.shape[1]-1), np.clip(y2, 0, small_bgr.shape[0]-1)
+
+    mask = np.zeros(small_bgr.shape[:2], dtype=np.uint8)
+    cv2.line(mask, (int(x1), int(y1)), (int(x2), int(y2)), 255, max(1, line_width), cv2.LINE_AA)
+    mask_bool = mask.astype(bool)
+    if mask_bool.sum() < 10:
+        return WHITE, 0.5, 0.5
+
+    hsv = cv2.cvtColor(small_bgr, cv2.COLOR_BGR2HSV)
+    lab = cv2.cvtColor(small_bgr, cv2.COLOR_BGR2LAB)
+    h, s, v = hsv[:,:,0][mask_bool].astype(np.float32), hsv[:,:,1][mask_bool].astype(np.float32), hsv[:,:,2][mask_bool].astype(np.float32)
+    lab_b = lab[:,:,2][mask_bool].astype(np.float32)
+
+    length = float(np.hypot(x2-x1, y2-y1))
+    angle = math.degrees(math.atan2(y2-y1, x2-x1)) % 180.0
+    diag = math.hypot(small_bgr.shape[1], small_bgr.shape[0])
+
+    feats = np.array([
+        float(((s <= 95) & (v >= 145)).mean()),
+        float(((h >= 15) & (h <= 40) & (s >= 70) & (v >= 95)).mean()),
+        float(np.mean(np.maximum(0.0, 1.0 - np.abs(h - 28.0) / 32.0))),
+        float(np.mean(s) / 255.0),
+        float(np.mean(v) / 255.0),
+        float(np.clip((np.mean(lab_b) - 128.0) / 60.0, -1.0, 1.0)),
+        float(min(1.0, length / max(diag * 0.45, 1.0))),
+        float(abs(math.sin(math.radians(angle)))),
+    ], dtype=np.float32).reshape(1, -1)
+
+    X = model_data["scaler"].transform(feats)
+    X_t = torch.tensor(X, dtype=torch.float32)
+
+    if "in_dim" in model_data:
+        # MLP model
+        in_dim = model_data["in_dim"]
+        model = _ColorMLP(in_dim)
+        model.load_state_dict(model_data["model"])
+        model.eval()
+        with torch.no_grad():
+            logits = model(X_t)[0]
+        white_prob = float(torch.softmax(logits, 0)[0])
+        yellow_prob = float(torch.softmax(logits, 0)[1])
+    else:
+        # Logistic regression
+        proba = model_data["model"].predict_proba(X)[0]
+        white_prob = float(proba[0])
+        yellow_prob = float(proba[1])
+
+    cls = YELLOW if yellow_prob > white_prob else WHITE
+    return cls, white_prob, yellow_prob
+
+
+def detect_image(image_bgr: np.ndarray, params: VerticalLaneParams,
+                 color_model=None) -> list[dict[str, Any]]:
     small, scale = scaled_image(image_bgr, params.max_width)
     masks = color_masks(small, params)
     instances: list[dict[str, Any]] = []
+
+    # Always use HSV masks for detection (proven line quality)
     for cls in (WHITE, YELLOW):
         segments = detect_segments(masks[cls], cls, params)
         groups = cluster_segments(segments, small.shape[:2], params)
@@ -282,6 +364,25 @@ def detect_image(image_bgr: np.ndarray, params: VerticalLaneParams) -> list[dict
             pred = group_to_prediction(group, cls, small.shape[:2], scale, params)
             if pred is not None:
                 instances.append(pred)
+
+    # Post-process: for YELLOW lines only, use LR model to suppress false positives.
+    # White lines are left untouched (HSV white precision is already 65%).
+    # Yellow suffers from road-surface false positives; LR provides a second opinion.
+    if color_model is not None:
+        filtered = []
+        for inst in instances:
+            ep = inst["endpoints"]
+            fitted = np.array([ep[0][0], ep[0][1], ep[1][0], ep[1][1]], dtype=np.float32)
+            cls, wp, yp = _classify_with_model(fitted, small, color_model, params.line_width)
+            inst["white_score"] = float(wp)
+            inst["yellow_score"] = float(yp)
+            inst["color_source"] = "logistic_regression_filter"
+            # For yellow detections: keep only if LR also says yellow (dual confirmation)
+            if inst["class"] == YELLOW and cls != YELLOW:
+                continue  # Drop — LR rejects this yellow
+            filtered.append(inst)
+        instances = filtered
+
     return limit_lane_counts(suppress_duplicates(instances))
 
 
@@ -458,11 +559,16 @@ def main() -> None:
     vis_dir.mkdir(parents=True, exist_ok=True)
     images: dict[str, dict[str, Any]] = {}
 
+    color_model = None
+    if args.color_model:
+        color_model = _load_color_model(args.color_model)
+        print(f"Loaded color model from {args.color_model}")
+
     for image_path in image_files(source):
         image = cv2.imread(str(image_path))
         if image is None:
             continue
-        instances = detect_image(image, params)
+        instances = detect_image(image, params, color_model=color_model)
         images[image_path.name] = {"width": image.shape[1], "height": image.shape[0], "instances": instances}
         cv2.imwrite(str(vis_dir / image_path.name), draw_predictions(image, instances, args.conf_thr))
 
