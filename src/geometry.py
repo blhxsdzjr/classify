@@ -157,7 +157,7 @@ def polygon_to_points(values: list[float], image_width: int, image_height: int) 
     return coords
 
 
-def bbox_yolo_to_xyxy(values: list[float], image_width: int, image_height: int) -> list[float]:
+def bbox_normalized_to_xyxy(values: list[float], image_width: int, image_height: int) -> list[float]:
     xc, yc, bw, bh = values
     xc *= image_width
     yc *= image_height
@@ -171,7 +171,7 @@ def bbox_yolo_to_xyxy(values: list[float], image_width: int, image_height: int) 
     ]
 
 
-def read_yolo_label_file(
+def read_line_label_file(
     label_path: Path,
     image_width: int,
     image_height: int,
@@ -192,14 +192,14 @@ def read_yolo_label_file(
             class_id = int(float(parts[0]))
             values = [float(v) for v in parts[1:]]
         except ValueError as exc:
-            raise ValueError(f"{label_path}:{line_no}: invalid YOLO label line: {raw!r}") from exc
+            raise ValueError(f"{label_path}:{line_no}: invalid normalized label line: {raw!r}") from exc
 
         class_name = class_id_to_name(class_id, names)
         if keep_only_eval_classes and not is_eval_class(class_name):
             continue
 
         if len(values) == 4:
-            bbox = bbox_yolo_to_xyxy(values, image_width, image_height)
+            bbox = bbox_normalized_to_xyxy(values, image_width, image_height)
             angle, endpoints, bbox = line_from_bbox_xyxy(bbox)
         elif len(values) >= 4 and len(values) % 2 == 0:
             points = polygon_to_points(values, image_width, image_height)
@@ -209,7 +209,7 @@ def read_yolo_label_file(
             angle, endpoints, bbox = fitted
         else:
             raise ValueError(
-                f"{label_path}:{line_no}: expected YOLO bbox or segmentation polygon, got {len(values)} values"
+                f"{label_path}:{line_no}: expected bbox or polygon values, got {len(values)} values"
             )
 
         instances.append(

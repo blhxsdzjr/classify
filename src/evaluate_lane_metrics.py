@@ -15,18 +15,18 @@ from .geometry import (
     bbox_iou_xyxy,
     center_distance,
     find_image_by_stem,
-    read_yolo_label_file,
+    read_line_label_file,
 )
 from .xlsx_counts import read_count_json, read_count_xlsx
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Evaluate white/yellow lane detections with an angle threshold.")
-    parser.add_argument("--pred", required=True, help="predictions.json from src.predict_yolo_lane")
-    parser.add_argument("--data", default=None, help="Optional YOLO data yaml. Used to resolve names/images/labels.")
+    parser = argparse.ArgumentParser(description="Evaluate white/yellow lane detections with count or line GT.")
+    parser.add_argument("--pred", required=True, help="Prediction JSON from the lane detection pipeline.")
+    parser.add_argument("--data", default=None, help="Optional data yaml. Used only when line-level labels are available.")
     parser.add_argument("--split", default="test", choices=("train", "val", "test"))
     parser.add_argument("--image-dir", default=None, help="Test image directory if --data is not enough.")
-    parser.add_argument("--gt-label-dir", default=None, help="Ground-truth YOLO label directory.")
+    parser.add_argument("--gt-label-dir", default=None, help="Ground-truth line label directory, if line-level GT exists.")
     parser.add_argument("--gt-counts", default=None, help="GT count JSON from src.prepare_local_dataset.")
     parser.add_argument("--gt-xlsx", default=None, help="Course count spreadsheet, e.g. 结果统计.xlsx.")
     parser.add_argument(
@@ -107,7 +107,7 @@ def load_ground_truth(
         if image is None:
             raise ValueError(f"Cannot read image: {image_path}")
         height, width = image.shape[:2]
-        gt_by_stem[label_path.stem] = read_yolo_label_file(label_path, width, height, names)
+        gt_by_stem[label_path.stem] = read_line_label_file(label_path, width, height, names)
         sizes[label_path.stem] = (width, height)
     return gt_by_stem, sizes
 

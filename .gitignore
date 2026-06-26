@@ -5,6 +5,7 @@ venv/
 env/
 runs/
 datasets/
+models/
 *.pt
 *.onnx
 *.engine

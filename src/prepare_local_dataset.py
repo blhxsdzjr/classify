@@ -6,35 +6,21 @@ import shutil
 import zipfile
 from pathlib import Path
 
-import yaml
-
 from .xlsx_counts import read_count_xlsx, write_count_json
 
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
-LABEL_EXTENSIONS = {".txt"}
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Prepare the local example/test zip files for this project.")
-    parser.add_argument("--root", default=".", help="Project root containing 道路example.zip, test(1).zip, and 结果统计.xlsx.")
+    parser = argparse.ArgumentParser(description="Prepare image folders and count labels for the non-YOLO pipeline.")
+    parser.add_argument("--root", default=".", help="Project root containing the example/test zips and count xlsx.")
     parser.add_argument("--example-zip", default=None, help="Training/example zip. Auto-detected when omitted.")
     parser.add_argument("--test-zip", default=None, help="Test zip. Auto-detected when omitted.")
-    parser.add_argument("--gt-xlsx", default=None, help="Count GT spreadsheet. Auto-detected when omitted.")
+    parser.add_argument("--gt-xlsx", default=None, help="Count spreadsheet. Auto-detected when omitted.")
     parser.add_argument("--out", default="datasets/local_colm")
     parser.add_argument("--val-ratio", type=float, default=0.2)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument(
-        "--label-mode",
-        choices=("lane-line", "color"),
-        default="lane-line",
-        help="lane-line merges white/yellow labels into class 0; color keeps white/yellow classes.",
-    )
-    parser.add_argument(
-        "--lane-class-ids",
-        default="0,1",
-        help="Source class ids treated as lane lines when --label-mode lane-line.",
-    )
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
 
@@ -54,7 +40,8 @@ def auto_find(root: Path, kind: str) -> Path | None:
 def zip_members(path: Path, extensions: set[str]) -> list[zipfile.ZipInfo]:
     with zipfile.ZipFile(path) as zf:
         members = [
-            info for info in zf.infolist()
+            info
+            for info in zf.infolist()
             if not info.is_dir() and Path(info.filename).suffix.lower() in extensions
         ]
     return sorted(members, key=lambda info: info.filename)
@@ -75,13 +62,9 @@ def copy_zip_images(
     clear: bool,
 ) -> list[str]:
     image_dir = out_dir / "images" / split
-    label_dir = out_dir / "labels" / split
     if clear and image_dir.exists():
         shutil.rmtree(image_dir)
-    if clear and label_dir.exists():
-        shutil.rmtree(label_dir)
     image_dir.mkdir(parents=True, exist_ok=True)
-    label_dir.mkdir(parents=True, exist_ok=True)
 
     copied: list[str] = []
     with zipfile.ZipFile(zip_path) as zf:
@@ -90,87 +73,6 @@ def copy_zip_images(
             extract_member(zf, member, image_dir / filename)
             copied.append(filename)
     return copied
-
-
-def copy_zip_labels(zip_path: Path, out_dir: Path, split: str, image_filenames: list[str]) -> int:
-    labels = zip_members(zip_path, LABEL_EXTENSIONS)
-    if not labels:
-        return 0
-    wanted_stems = {Path(name).stem for name in image_filenames}
-    labels = [member for member in labels if Path(member.filename).stem in wanted_stems]
-    label_dir = out_dir / "labels" / split
-    label_dir.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(zip_path) as zf:
-        for member in labels:
-            extract_member(zf, member, label_dir / Path(member.filename).name)
-    return len(labels)
-
-
-def parse_class_ids(raw: str) -> set[int]:
-    ids: set[int] = set()
-    for item in raw.split(","):
-        stripped = item.strip()
-        if stripped:
-            ids.add(int(stripped))
-    return ids
-
-
-def remap_label_text_to_lane_line(text: str, lane_class_ids: set[int]) -> tuple[str, int]:
-    converted: list[str] = []
-    skipped = 0
-    for raw in text.splitlines():
-        stripped = raw.strip()
-        if not stripped:
-            continue
-        parts = stripped.split(maxsplit=1)
-        try:
-            class_id = int(float(parts[0]))
-        except ValueError:
-            skipped += 1
-            continue
-        if class_id not in lane_class_ids:
-            skipped += 1
-            continue
-        rest = parts[1] if len(parts) > 1 else ""
-        converted.append(f"0 {rest}".rstrip())
-    return "\n".join(converted) + ("\n" if converted else ""), skipped
-
-
-def convert_existing_labels(out_dir: Path, split: str, lane_class_ids: set[int]) -> tuple[int, int]:
-    label_dir = out_dir / "labels" / split
-    if not label_dir.exists():
-        return 0, 0
-    converted = 0
-    skipped = 0
-    for label_path in label_dir.rglob("*.txt"):
-        text = label_path.read_text(encoding="utf-8")
-        new_text, skipped_here = remap_label_text_to_lane_line(text, lane_class_ids)
-        label_path.write_text(new_text, encoding="utf-8")
-        converted += sum(1 for line in new_text.splitlines() if line.strip())
-        skipped += skipped_here
-    return converted, skipped
-
-
-def write_data_yaml(out_dir: Path, label_mode: str) -> Path:
-    if label_mode == "lane-line":
-        names = {0: "lane_line"}
-    else:
-        names = {
-            0: "white_lane",
-            1: "yellow_lane",
-            2: "road_surface",
-        }
-    data = {
-        "path": str(out_dir.as_posix()),
-        "train": "images/train",
-        "val": "images/val",
-        "test": "images/test",
-        "names": names,
-    }
-    yaml_path = out_dir / "data.yaml"
-    yaml_path.parent.mkdir(parents=True, exist_ok=True)
-    yaml_path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
-    return yaml_path
 
 
 def main() -> None:
@@ -206,23 +108,6 @@ def main() -> None:
     val_files = copy_zip_images(example_zip, out_dir, "val", val_images, clear=args.overwrite)
     test_files = copy_zip_images(test_zip, out_dir, "test", test_images, clear=args.overwrite)
 
-    train_labels = copy_zip_labels(example_zip, out_dir, "train", train_files)
-    val_labels = copy_zip_labels(example_zip, out_dir, "val", val_files)
-    test_labels = copy_zip_labels(test_zip, out_dir, "test", test_files)
-    lane_label_stats = None
-    if args.label_mode == "lane-line":
-        lane_class_ids = parse_class_ids(args.lane_class_ids)
-        train_converted, train_skipped = convert_existing_labels(out_dir, "train", lane_class_ids)
-        val_converted, val_skipped = convert_existing_labels(out_dir, "val", lane_class_ids)
-        test_converted, test_skipped = convert_existing_labels(out_dir, "test", lane_class_ids)
-        lane_label_stats = {
-            "train": (train_converted, train_skipped),
-            "val": (val_converted, val_skipped),
-            "test": (test_converted, test_skipped),
-        }
-
-    data_yaml = write_data_yaml(out_dir, args.label_mode)
-
     gt_json = None
     if gt_xlsx is not None and gt_xlsx.exists():
         counts = read_count_xlsx(gt_xlsx)
@@ -230,19 +115,12 @@ def main() -> None:
         write_count_json(counts, gt_json)
 
     print(f"Prepared dataset: {out_dir}")
-    print(f"Data yaml: {data_yaml}")
     print(f"Train images: {len(train_files)}")
     print(f"Val images: {len(val_files)}")
     print(f"Test images: {len(test_files)}")
-    print(f"Copied labels: train={train_labels}, val={val_labels}, test={test_labels}")
-    print(f"Label mode: {args.label_mode}")
-    if lane_label_stats is not None:
-        for split, (converted, skipped) in lane_label_stats.items():
-            print(f"{split} lane_line labels: converted={converted}, skipped_non_lane={skipped}")
     if gt_json is not None:
         print(f"GT count json: {gt_json}")
-    if train_labels == 0 and val_labels == 0:
-        print("WARNING: example zip has images only. Add YOLO labels before supervised YOLO training.")
+    print("Non-YOLO pipeline ready: use src.train_color_model and src.run_classical_pipeline.")
 
 
 if __name__ == "__main__":
