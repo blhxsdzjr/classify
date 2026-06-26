@@ -385,9 +385,26 @@ def model_color_scores(features: list[float], model: dict[str, Any] | None) -> d
 
 
 def classify_candidate(candidate: LaneCandidate, model: dict[str, Any] | None) -> tuple[str, dict[str, float]]:
-    scores = model_color_scores(candidate.features, model)
-    cls = YELLOW if scores[YELLOW] > scores[WHITE] else WHITE
-    return cls, scores
+    model_scores = model_color_scores(candidate.features, model)
+    fallback_scores = fallback_color_scores(candidate.features)
+
+    # Prefer fallback (heuristic) when model is uncertain or strongly disagrees.
+    # The model's prior-heavy log-probability scores can misclassify yellow as white
+    # due to the 9:1 class imbalance.
+    fallback_cls = YELLOW if fallback_scores[YELLOW] > fallback_scores[WHITE] else WHITE
+    model_cls = YELLOW if model_scores[YELLOW] > model_scores[WHITE] else WHITE
+
+    if fallback_cls == model_cls:
+        cls = model_cls
+    elif fallback_cls == YELLOW and fallback_scores[YELLOW] > fallback_scores[WHITE] + 0.3:
+        # Fallback strongly prefers yellow — override model
+        cls = YELLOW
+    elif fallback_cls == WHITE and fallback_scores[WHITE] > fallback_scores[YELLOW] + 0.3:
+        cls = WHITE
+    else:
+        cls = model_cls
+
+    return cls, model_scores
 
 
 def select_with_count_constraints(
