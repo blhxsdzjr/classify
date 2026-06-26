@@ -1,0 +1,316 @@
+{
+  "meta": {
+    "method": "lane_cnn"
+  },
+  "images": {
+    "1.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "10.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "11.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "12.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "13.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "14.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "15.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "16.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.08513186126947403,
+          "angle_deg": 12.061266761628588,
+          "endpoints": [
+            [
+              1233.8218994140625,
+              772.6272583007812
+            ],
+            [
+              51.074462890625,
+              519.9043579101562
+            ]
+          ],
+          "bbox": [
+            38.767677307128906,
+            495.0,
+            1201.7979736328125,
+            922.5
+          ],
+          "row_points": [
+            [
+              949.8080808080808,
+              495.0
+            ],
+            [
+              38.76767676767677,
+              577.5
+            ],
+            [
+              1201.79797979798,
+              922.5
+            ]
+          ]
+        }
+      ]
+    },
+    "17.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "18.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "19.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "2.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "20.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "21.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "22.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "23.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.09816858917474747,
+          "angle_deg": 2.3773473721411165,
+          "endpoints": [
+            [
+              1474.78173828125,
+              669.9711303710938
+            ],
+            [
+              37.4061279296875,
+              610.2965087890625
+            ]
+          ],
+          "bbox": [
+            38.767677307128906,
+            322.5,
+            1473.1717529296875,
+            922.5
+          ],
+          "row_points": [
+            [
+              988.5757575757575,
+              322.5
+            ],
+            [
+              949.8080808080808,
+              495.0
+            ],
+            [
+              38.76767676767677,
+              577.5
+            ],
+            [
+              1473.171717171717,
+              708.75
+            ],
+            [
+              407.06060606060606,
+              836.25
+            ],
+            [
+              1201.79797979798,
+              922.5
+            ]
+          ]
+        }
+      ]
+    },
+    "24.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "25.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": [
+        {
+          "class": "yellow_lane",
+          "conf": 0.08845741301774979,
+          "angle_deg": 8.853884811764942,
+          "endpoints": [
+            [
+              1464.9599609375,
+              761.4674072265625
+            ],
+            [
+              44.5760498046875,
+              540.2123413085938
+            ]
+          ],
+          "bbox": [
+            38.767677307128906,
+            495.0,
+            1473.1717529296875,
+            922.5
+          ],
+          "row_points": [
+            [
+              949.8080808080808,
+              495.0
+            ],
+            [
+              38.76767676767677,
+              577.5
+            ],
+            [
+              1473.171717171717,
+              708.75
+            ],
+            [
+              1201.79797979798,
+              922.5
+            ]
+          ]
+        }
+      ]
+    },
+    "26.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "27.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "28.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "29.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "3.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "30.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "31.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "32.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "33.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "34.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "35.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "36.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "37.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "4.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "5.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "6.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "7.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "8.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    },
+    "9.jpg": {
+      "width": 1920,
+      "height": 1080,
+      "instances": []
+    }
+  }
+}

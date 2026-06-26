@@ -89,8 +89,12 @@ def roi_mask(shape: tuple[int, int], top_ratio: float) -> np.ndarray:
 def color_masks(image_bgr: np.ndarray, params: VerticalLaneParams) -> dict[str, np.ndarray]:
     hsv = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
     h, s, v = cv2.split(hsv)
-    white = ((s <= 95) & (v >= 145)).astype(np.uint8) * 255
-    yellow = ((h >= 15) & (h <= 40) & (s >= 70) & (v >= 95)).astype(np.uint8) * 255
+    # Relaxed thresholds calibrated from GT analysis:
+    #   White GT: median V=149, S=57 — only 46% pass strict V>=145
+    #   Yellow GT: median S=42 — only 40% pass strict S>=70
+    # Strategy: catch more true lanes, then filter false positives geometrically + with MLP.
+    white = ((s <= 100) & (v >= 105)).astype(np.uint8) * 255
+    yellow = ((h >= 12) & (h <= 44) & (s >= 25) & (v >= 105)).astype(np.uint8) * 255
 
     road_roi = roi_mask(image_bgr.shape[:2], params.roi_top_ratio)
     kernel = np.ones((3, 3), np.uint8)
@@ -158,7 +162,8 @@ def detect_segments(mask: np.ndarray, cls: str, params: VerticalLaneParams) -> l
             continue
         sample = line_mask(mask.shape, raw, params.line_width)
         color_fraction = float(np.mean(mask[sample] > 0)) if np.any(sample) else 0.0
-        min_color_fraction = params.min_color_fraction + (0.07 if cls == YELLOW else 0.0)
+        # Tighter color validation to compensate for relaxed mask thresholds
+        min_color_fraction = params.min_color_fraction + (0.05 if cls == YELLOW else 0.02)
         if color_fraction < min_color_fraction:
             continue
         segments.append(raw)
@@ -319,16 +324,16 @@ def _load_color_model(path: str):
 
 
 class _ColorMLP(torch.nn.Module):
-    def __init__(self, in_dim=8):
+    def __init__(self, in_dim=8, hidden_dim=32, num_classes=2):
         super().__init__()
         self.net = torch.nn.Sequential(
-            torch.nn.Linear(in_dim, 32),
+            torch.nn.Linear(in_dim, hidden_dim),
             torch.nn.ReLU(),
-            torch.nn.Dropout(0.3),
-            torch.nn.Linear(32, 16),
+            torch.nn.Dropout(0.35),
+            torch.nn.Linear(hidden_dim, hidden_dim // 2),
             torch.nn.ReLU(),
-            torch.nn.Dropout(0.2),
-            torch.nn.Linear(16, 2),
+            torch.nn.Dropout(0.25),
+            torch.nn.Linear(hidden_dim // 2, num_classes),
         )
     def forward(self, x):
         return self.net(x)
@@ -356,8 +361,8 @@ def _classify_with_model(fitted_line: np.ndarray, small_bgr: np.ndarray, model_d
     diag = math.hypot(small_bgr.shape[1], small_bgr.shape[0])
 
     feats = np.array([
-        float(((s <= 95) & (v >= 145)).mean()),
-        float(((h >= 15) & (h <= 40) & (s >= 70) & (v >= 95)).mean()),
+        float(((s <= 100) & (v >= 105)).mean()),
+        float(((h >= 12) & (h <= 44) & (s >= 25) & (v >= 105)).mean()),
         float(np.mean(np.maximum(0.0, 1.0 - np.abs(h - 28.0) / 32.0))),
         float(np.mean(s) / 255.0),
         float(np.mean(v) / 255.0),
@@ -369,24 +374,123 @@ def _classify_with_model(fitted_line: np.ndarray, small_bgr: np.ndarray, model_d
     X = model_data["scaler"].transform(feats)
     X_t = torch.tensor(X, dtype=torch.float32)
 
+    num_classes = model_data.get("num_classes", 2)
+
     if "in_dim" in model_data:
-        # MLP model
+        # MLP model (2-class or 3-class)
         in_dim = model_data["in_dim"]
-        model = _ColorMLP(in_dim)
+        hidden_dim = model_data.get("hidden_dim", 32)
+        model = _ColorMLP(in_dim, hidden_dim, num_classes)
         model.load_state_dict(model_data["model"])
         model.eval()
         with torch.no_grad():
             logits = model(X_t)[0]
-        white_prob = float(torch.softmax(logits, 0)[0])
-        yellow_prob = float(torch.softmax(logits, 0)[1])
+        probs = torch.softmax(logits, 0).numpy()
     else:
         # Logistic regression
         proba = model_data["model"].predict_proba(X)[0]
-        white_prob = float(proba[0])
-        yellow_prob = float(proba[1])
+        probs = np.array([float(proba[0]), float(proba[1])])
 
-    cls = YELLOW if yellow_prob > white_prob else WHITE
-    return cls, white_prob, yellow_prob
+    if num_classes == 3:
+        white_prob = float(probs[0])
+        yellow_prob = float(probs[1])
+        nonlane_prob = float(probs[2])
+        is_lane = nonlane_prob < 0.5  # Must be >50% confident it's a lane
+        cls = YELLOW if yellow_prob > white_prob else WHITE
+        return cls, white_prob, yellow_prob, is_lane
+    else:
+        white_prob = float(probs[0])
+        yellow_prob = float(probs[1])
+        cls = YELLOW if yellow_prob > white_prob else WHITE
+        return cls, white_prob, yellow_prob
+
+
+def estimate_vanishing_point(instances: list[dict[str, Any]], image_shape: tuple[int, int]) -> tuple[float, float] | None:
+    """Estimate vanishing point from line intersections (RANSAC-style median).
+
+    Returns (vx, vy) in image coordinates, or None if insufficient lines.
+    """
+    if len(instances) < 3:
+        return None
+
+    h, w = image_shape
+    intersections = []
+    for i, a in enumerate(instances):
+        ep_a = a.get("endpoints", [])
+        if len(ep_a) < 2:
+            continue
+        x1, y1 = ep_a[0]
+        x2, y2 = ep_a[1]
+        dx_a, dy_a = x2 - x1, y2 - y1
+        len_a = math.hypot(dx_a, dy_a)
+        if len_a < 1:
+            continue
+
+        for b in instances[i + 1:]:
+            ep_b = b.get("endpoints", [])
+            if len(ep_b) < 2:
+                continue
+            x3, y3 = ep_b[0]
+            x4, y4 = ep_b[1]
+            dx_b, dy_b = x4 - x3, y4 - y3
+            len_b = math.hypot(dx_b, dy_b)
+            if len_b < 1:
+                continue
+            # Skip near-parallel lines (angle diff < 5 deg)
+            angle_a = math.degrees(math.atan2(dy_a, dx_a)) % 180.0
+            angle_b = math.degrees(math.atan2(dy_b, dx_b)) % 180.0
+            diff = min(abs(angle_a - angle_b), 180.0 - abs(angle_a - angle_b))
+            if diff < 5.0:
+                continue
+            # Line-line intersection
+            denom = dx_a * dy_b - dy_a * dx_b
+            if abs(denom) < 1e-8:
+                continue
+            t = ((x3 - x1) * dy_b - (y3 - y1) * dx_b) / denom
+            ix = x1 + t * dx_a
+            iy = y1 + t * dy_a
+            # VP should be above the image or near the top
+            if iy < h * 0.6 and 0 < ix < w:
+                intersections.append((ix, iy))
+
+    if len(intersections) < 2:
+        return None
+
+    # Median of intersections as robust VP estimate
+    ixs, iys = zip(*intersections)
+    vx = float(np.median(ixs))
+    vy = float(np.median(iys))
+    return (vx, vy)
+
+
+def vp_consistency_score(endpoints: list[list[float]], vp: tuple[float, float],
+                         image_shape: tuple[int, int]) -> float:
+    """How well does a line point toward the vanishing point?  1.0 = perfect, 0.0 = orthogonal."""
+    h, w = image_shape
+    (x1, y1), (x2, y2) = endpoints
+    vx, vy = vp
+
+    # Line direction (pointing upward)
+    if y1 < y2:
+        x_top, y_top, x_bot, y_bot = x1, y1, x2, y2
+    else:
+        x_top, y_top, x_bot, y_bot = x2, y2, x1, y1
+
+    # Expected direction from bottom point to VP
+    dx_expected = vx - x_bot
+    dy_expected = vy - y_bot
+    # Actual direction from bottom point to top point
+    dx_actual = x_top - x_bot
+    dy_actual = y_top - y_bot
+
+    len_exp = math.hypot(dx_expected, dy_expected)
+    len_act = math.hypot(dx_actual, dy_actual)
+    if len_exp < 1 or len_act < 1:
+        return 0.0
+
+    # Cosine similarity between expected and actual direction
+    cos_sim = (dx_expected * dx_actual + dy_expected * dy_actual) / (len_exp * len_act)
+    return max(0.0, float(cos_sim))
 
 
 def detect_image(image_bgr: np.ndarray, params: VerticalLaneParams,
@@ -404,9 +508,10 @@ def detect_image(image_bgr: np.ndarray, params: VerticalLaneParams,
             if pred is not None:
                 instances.append(pred)
 
-    # Use learned color features as a second opinion. This both suppresses yellow
-    # false positives and fixes yellow markings initially found by the white mask.
+    # Post-process with learned 3-class classifier (white / yellow / non-lane).
+    # Drops detections classified as non-lane; re-classifies color when confident.
     if color_model is not None:
+        is_3class = color_model.get("num_classes", 2) == 3
         filtered = []
         for inst in instances:
             ep = inst["endpoints"]
@@ -414,19 +519,41 @@ def detect_image(image_bgr: np.ndarray, params: VerticalLaneParams,
                 [ep[0][0] * scale, ep[0][1] * scale, ep[1][0] * scale, ep[1][1] * scale],
                 dtype=np.float32,
             )
-            model_cls, wp, yp = _classify_with_model(fitted, small, color_model, params.line_width)
+            result = _classify_with_model(fitted, small, color_model, params.line_width)
+            if is_3class:
+                model_cls, wp, yp, is_lane = result
+            else:
+                model_cls, wp, yp = result
+                is_lane = True
+
             inst["white_score"] = float(wp)
             inst["yellow_score"] = float(yp)
-            inst["color_source"] = "learned_color_classifier"
-            if inst["class"] == YELLOW and yp < params.yellow_reject_threshold:
-                continue
-            if max(wp, yp) >= params.color_override_threshold and model_cls != inst["class"]:
+            inst["color_source"] = "learned_3class" if is_3class else "learned_color_classifier"
+
+            if is_3class and not is_lane:
+                continue  # Drop non-lane detection
+
+            if is_3class:
                 inst["class"] = model_cls
-                inst["source_class"] = "vertical_color_hough_group_color_corrected"
+            else:
+                if inst["class"] == YELLOW and yp < params.yellow_reject_threshold:
+                    continue
+                if max(wp, yp) >= params.color_override_threshold and model_cls != inst["class"]:
+                    inst["class"] = model_cls
+                    inst["source_class"] = "vertical_color_hough_group_color_corrected"
             filtered.append(inst)
         instances = filtered
 
-    return limit_lane_counts(suppress_duplicates(instances))
+    # --- Vanishing point filtering: remove lines that don't converge to VP ---
+    instances = suppress_duplicates(instances)
+    if len(instances) >= 3:
+        vp = estimate_vanishing_point(instances, small.shape[:2])
+        if vp is not None:
+            instances = [inst for inst in instances
+                         if vp_consistency_score(inst["endpoints"], vp, small.shape[:2]) >= 0.45]
+    # -------------------------------------------------------------------------
+
+    return limit_lane_counts(instances)
 
 
 def draw_predictions(image: np.ndarray, instances: list[dict[str, Any]], conf_thr: float) -> np.ndarray:
