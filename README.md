@@ -69,6 +69,46 @@ py -3 -m src.vertical_lane_pipeline ^
 py -3 -m src.vertical_lane_pipeline --no-color-model
 ```
 
+## 手动标注
+
+如果需要给图片补充逐条 GT 车道线，用 OpenCV 标注工具：
+
+```bash
+py -3 -m src.manual_annotate_lanes ^
+  --image-dir datasets/local_colm/images/test ^
+  --label-dir datasets/local_colm/labels/test
+```
+
+从某张图开始：
+
+```bash
+py -3 -m src.manual_annotate_lanes --start 37.jpg
+```
+
+快捷键：
+
+```text
+鼠标左键     添加一个点
+鼠标右键     结束当前车道线
+Enter        结束当前车道线
+w            当前类别切到白线
+y            当前类别切到黄线
+u            撤销当前线的最后一个点
+z            撤销当前未完成线；如果没有未完成线，则删除上一条已标线
+d            清空当前图片所有标注
+s            保存当前图片标注
+n / p        保存并切到下一张 / 上一张
+q / Esc      保存当前图片并退出
+```
+
+保存格式是 `datasets/local_colm/labels/test/*.txt`，每行一条车道线：
+
+```text
+class_id x1 y1 x2 y2 ...
+```
+
+坐标是 0-1 归一化折线点；`0` 表示白线，`1` 表示黄线。这个格式可以被现有 `src.evaluate_lane_metrics` 读取，用来做逐条线角度匹配。
+
 ## 针对当前误差的优化点
 
 - 图中黄线被画成白线：颜色模型现在会对所有候选二次判断，不只过滤黄线，也会把白色候选纠正成黄线。
