@@ -1,17 +1,19 @@
-# 非 YOLO 车道线检测：先判定线，再学习颜色
+# UFLD-inspired 车道线检测：row-anchor 分类 + 颜色学习
 
-这版项目不使用 YOLO，也不依赖 `ultralytics`。整体思路是传统视觉 + 轻量颜色学习：
+当前方案借鉴 [cfzd/Ultra-Fast-Lane-Detection](https://github.com/cfzd/Ultra-Fast-Lane-Detection) 和论文 *Ultra Fast Structure-aware Deep Lane Detection* 的核心思想：**不做 YOLO 检测，也不做逐像素分割，而是把车道线检测变成 row-based selecting 问题**。
+
+论文思路是：在图像中预定义若干行 `row anchors`，模型在每一行上选择车道线所在的横向 grid cell；如果该行没有车道线，就选择背景类。这样比普通分割计算量更低，也能利用全局特征处理遮挡、强光等场景。
+
+本项目根据当前数据做了课程项目版实现：
 
 ```text
 图片
-  -> Canny / Hough 找线候选
-  -> 过滤人行道、横线、短线等干扰
-  -> 提取每条线附近的 HSV/Lab 颜色特征
-  -> 用 结果统计.xlsx 的白线/黄线数量标注弱监督学习颜色
-  -> 输出白线、黄线数量和指标
+  -> 传统线候选生成弱标签
+  -> 转成 UFLD row-anchor 标签
+  -> 训练 TinyUFLD: row-grid 分类 + 白/黄颜色头
+  -> 推理输出 white_lane / yellow_lane
+  -> 用 结果统计.xlsx 做数量级评估
 ```
-
-`结果统计.xlsx` 是每张图的白线/黄线数量标注，不是每条线的坐标标注。因此它可以用来训练颜色判别和做数量统计，但不能严格验证“角度偏差 15 度以内”。
 
 ## 1. 安装
 
@@ -19,9 +21,11 @@
 pip install -r requirements.txt
 ```
 
+依赖包含 OpenCV、NumPy、PyTorch、tqdm。
+
 ## 2. 准备数据
 
-当前目录已适配：
+当前目录适配：
 
 ```text
 道路example.zip
@@ -29,7 +33,7 @@ test(1).zip
 结果统计.xlsx
 ```
 
-解压整理：
+整理数据：
 
 ```bash
 python -m src.prepare_local_dataset --overwrite
@@ -45,82 +49,118 @@ datasets/local_colm/
   images/test/
 ```
 
-## 3. 学习白/黄颜色模型
+## 3. 生成 UFLD row-anchor 弱标签
 
-使用 `结果统计.xlsx` 的数量标注做弱监督：先在每张图中找线候选，再按照该图的白线数、黄线数给候选线分配弱标签，最后学习两个颜色原型。
+因为当前没有逐条车道线坐标标注，先用传统线候选 + `结果统计.xlsx` 数量标注生成弱标签。每条线会被转成：
+
+```text
+lane_slot x row_anchor -> grid_cell
+```
+
+命令：
 
 ```bash
-python -m src.train_color_model \
+python -m src.generate_ufld_labels \
   --image-dir datasets/local_colm/images/test \
   --gt-xlsx 结果统计.xlsx \
-  --out models/color_model.json \
-  --samples-out models/color_samples.csv
+  --out-dir datasets/local_colm/ufld_labels/test \
+  --index-out datasets/local_colm/ufld_test_index.json
 ```
 
-如果不想“学习颜色”，也可以跳过这一步，检测脚本会退回到手写 HSV 规则。
-
-## 4. 运行传统视觉检测
-
-不使用数量约束，只靠线检测 + 颜色模型：
+## 4. 训练 UFLD-style 模型
 
 ```bash
-python -m src.run_classical_pipeline \
-  --source datasets/local_colm/images/test \
-  --color-model models/color_model.json \
-  --out predictions_classical.json \
-  --counts-out prediction_counts_classical.csv \
-  --save-vis runs/classical_vis
+python -m src.train_ufld \
+  --index datasets/local_colm/ufld_test_index.json \
+  --out models/ufld_tiny.pt \
+  --epochs 60 \
+  --batch 8 \
+  --device cuda:0
 ```
 
-如果允许使用 `结果统计.xlsx` 作为数量级弱监督，可以加数量约束。它会按每张图标注的白线数/黄线数，从候选线中选择对应数量的结果：
+如果没有 GPU：
 
 ```bash
-python -m src.run_classical_pipeline \
+python -m src.train_ufld \
+  --index datasets/local_colm/ufld_test_index.json \
+  --out models/ufld_tiny.pt \
+  --epochs 60 \
+  --batch 4 \
+  --device cpu
+```
+
+模型输出两部分：
+
+- `grid_logits`：每个 lane slot、每个 row anchor 的横向 grid 分类。
+- `color_logits`：每个 lane slot 的颜色分类，白线 / 黄线 / none。
+
+训练中还加入了类似 UFLD 结构先验的平滑损失，使相邻 row 的预测位置不要剧烈跳变。
+
+## 5. 推理
+
+普通推理：
+
+```bash
+python -m src.predict_ufld \
+  --weights models/ufld_tiny.pt \
   --source datasets/local_colm/images/test \
-  --color-model models/color_model.json \
+  --out predictions_ufld.json \
+  --counts-out prediction_counts_ufld.csv \
+  --save-vis runs/ufld_vis
+```
+
+如果允许使用 `结果统计.xlsx` 的每图白/黄数量做后处理约束：
+
+```bash
+python -m src.predict_ufld \
+  --weights models/ufld_tiny.pt \
+  --source datasets/local_colm/images/test \
   --gt-xlsx 结果统计.xlsx \
   --use-count-constraints \
-  --out predictions_classical_constrained.json \
-  --counts-out prediction_counts_classical_constrained.csv \
-  --save-vis runs/classical_vis_constrained
+  --out predictions_ufld_constrained.json \
+  --counts-out prediction_counts_ufld_constrained.csv \
+  --save-vis runs/ufld_vis_constrained
 ```
 
-注意：带 `--use-count-constraints` 的结果使用了测试集数量标注，应该描述为“数量标注约束后的弱监督结果”，不要说成完全独立的模型泛化性能。
+注意：带 `--use-count-constraints` 的结果使用了测试集数量标注，适合作为“数量标注约束后的弱监督结果”说明，不能说成完全独立泛化指标。
 
-## 5. 统计指标
-
-数量级评估：
+## 6. 数量级评估
 
 ```bash
 python -m src.evaluate_lane_metrics \
-  --pred predictions_classical_constrained.json \
+  --pred predictions_ufld_constrained.json \
   --gt-xlsx 结果统计.xlsx \
   --count-only \
-  --out metrics_classical_count_only.json
+  --out metrics_ufld_count_only.json
 ```
 
-指标含义：
+`结果统计.xlsx` 只有每张图白线/黄线数量，没有逐条线坐标，所以这里只能做数量级 Precision / Recall / F1，不能严格验证 15 度角度规则。
 
-```text
-Precision = 正确检测数 / 检测总数
-Recall    = 正确检测数 / GT 总数
-F1        = 2 * Precision * Recall / (Precision + Recall)
-```
+## 7. 主要代码
 
-当前 Excel 没有每条线的位置和角度，所以这里的正确数按每张图、每个类别的 `min(预测数量, GT数量)` 统计。
+- `src/generate_ufld_labels.py`：生成 row-anchor 弱标签。
+- `src/ufld_model.py`：TinyUFLD 模型，row-grid 分类 + 颜色头。
+- `src/train_ufld.py`：训练 UFLD-style 模型。
+- `src/predict_ufld.py`：推理并输出白线/黄线 JSON、CSV、可视化。
+- `src/classical_lane.py`：传统线候选生成，用来启动弱标签。
+- `src/evaluate_lane_metrics.py`：统计指标。
 
-## 6. 主要代码
+## 8. 和论文的关系
 
-- `src.prepare_local_dataset.py`：解压数据、读取 Excel 数量标注。
-- `src.classical_lane.py`：Canny/Hough 找线、合并线段、提取颜色特征。
-- `src.train_color_model.py`：从数量标注中弱监督学习白/黄颜色模型。
-- `src.run_classical_pipeline.py`：端到端检测并输出预测 JSON、CSV、可视化。
-- `src.evaluate_lane_metrics.py`：统计白线、黄线 Precision / Recall / F1。
+借鉴点：
 
-## 7. 可以给老师解释的点
+- 使用预定义 row anchors。
+- 把车道线位置预测改成横向 grid classification。
+- 使用全局图像特征一次性预测多条 lane。
+- 加入相邻 row 位置平滑的结构损失。
 
-本方法没有用 YOLO，而是先做几何意义上的“线检测”。Canny 边缘和 Hough 变换会找出图片中接近直线的结构，再通过 ROI、长度、角度、颜色比例过滤掉一部分车辆、人行道和路面干扰。
+和原论文不同：
 
-颜色不是直接靠固定阈值死判，而是先从每条候选线周围提取 HSV/Lab 特征，例如白色比例、黄色比例、饱和度、亮度、Lab 的黄色通道等；再利用 `结果统计.xlsx` 中每张图的白线数、黄线数，弱监督学习白线和黄线的颜色原型。
+- 原论文在 TuSimple / CULane 这类有逐点 lane 标注的数据集上训练。
+- 本项目当前只有数量标注，因此先用传统线候选生成弱 row-label。
+- 本项目额外加了白/黄颜色头，以适配实验要求。
 
-局限也要说明清楚：Excel 只有数量，没有每条线的位置，所以无法严格判断某条预测线是否和 GT 的角度相差 15 度以内。要做严格角度评估，需要补充每条线的坐标标注。
+参考：
+
+- GitHub: https://github.com/cfzd/Ultra-Fast-Lane-Detection
+- Paper: https://arxiv.org/abs/2004.11757
