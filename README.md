@@ -1,34 +1,35 @@
-# UFLD-inspired 车道线检测：row-anchor 响应跟踪 + 颜色学习
+# 竖直车道线检测与白黄分类
 
-当前方案借鉴 [cfzd/Ultra-Fast-Lane-Detection](https://github.com/cfzd/Ultra-Fast-Lane-Detection) 和论文 *Ultra Fast Structure-aware Deep Lane Detection* 的核心思想：**不做 YOLO 检测，也不做逐像素分割，而是把车道线检测变成 row-based selecting 问题**。
+本项目用于课程测试集中的竖直/近竖直车道线检测，并按白线、黄线分别统计数量、Precision、Recall 和 F1。可视化中白线用红色描出，黄线用蓝色描出。
 
-论文思路是：在图像中预定义若干行 `row anchors`，模型在每一行上选择车道线所在的横向 grid cell；如果该行没有车道线，就选择背景类。这样比普通分割计算量更低，也能利用全局特征处理遮挡、强光等场景。
-
-本项目当前默认用更稳的 **row-anchor 响应跟踪**：每一行找白/黄线响应峰，再跨行用连续性约束连成车道线。这样避免小数据弱监督训练出的 row-grid 模型乱跳。
+当前主流程是传统视觉 + 轻量颜色分类器：
 
 ```text
 图片
-  -> 固定 row anchors
-  -> 每行找白/黄/边缘响应峰
-  -> 跨行动态跟踪连接成车道线
-  -> 推理输出 white_lane / yellow_lane
-  -> 用 结果统计.xlsx 做数量级评估
+  -> 白/黄 HSV 颜色候选
+  -> ROI + 近竖直 Hough 线段
+  -> 同方向、同位置断续段聚合成一条线
+  -> 可选 LR/MLP 颜色模型修正白黄类别
+  -> 输出 JSON / CSV / XLSX / 可视化图片
 ```
 
-## 1. 安装
+## 安装
 
 ```bash
 pip install -r requirements.txt
 ```
 
-依赖包含 OpenCV、NumPy、PyTorch、tqdm。
+如果电脑上 `python` 指向 Anaconda 且没有 OpenCV，可以用 Windows 的 Python launcher：
 
-## 2. 准备数据
+```bash
+py -3 -m src.vertical_lane_pipeline --help
+```
 
-当前目录适配：
+## 准备数据
+
+当前目录默认适配：
 
 ```text
-道路example.zip
 test(1).zip
 结果统计.xlsx
 ```
@@ -36,7 +37,7 @@ test(1).zip
 整理数据：
 
 ```bash
-python -m src.prepare_local_dataset --overwrite
+py -3 -m src.prepare_local_dataset --overwrite
 ```
 
 生成：
@@ -44,155 +45,56 @@ python -m src.prepare_local_dataset --overwrite
 ```text
 datasets/local_colm/
   gt_counts.json
-  images/train/
-  images/val/
   images/test/
 ```
 
-## 3. 推荐推理：row-anchor 响应跟踪
+## 运行检测
 
-不需要训练模型，先跑这一版看可视化是否正常：
-
-```bash
-python -m src.predict_row_anchor \
-  --source datasets/local_colm/images/test \
-  --out predictions_row_anchor.json \
-  --counts-out prediction_counts_row_anchor.csv \
-  --save-vis runs/row_anchor_vis
-```
-
-默认可视化会画成干净的蓝色平滑曲线，接近手工标线效果；如果想调试每个 row anchor 的点和文字标签，可以加 `--debug-vis`。
-
-如果允许使用 `结果统计.xlsx` 的每图白/黄数量做后处理约束：
+默认会使用 `models/color_lr.pkl` 做颜色后处理。如果模型文件不存在，会自动退回纯 HSV/CV 结果。
 
 ```bash
-python -m src.predict_row_anchor \
-  --source datasets/local_colm/images/test \
-  --gt-xlsx 结果统计.xlsx \
-  --use-count-constraints \
-  --out predictions_row_anchor_constrained.json \
-  --counts-out prediction_counts_row_anchor_constrained.csv \
-  --save-vis runs/row_anchor_vis_constrained
-```
-
-可调参数：
-
-- `--peak-rel-threshold`：响应峰阈值，太多误检就调大，例如 `0.45`。
-- `--max-match-distance`：跨 row 连接距离，线断开就调大，乱连就调小。
-- `--min-points`：一条线至少经过多少个 row，误检多就调大。
-
-## 3.1 竖直断续线 + 白黄统计脚本
-
-如果只需要按本次作业要求找竖直/近竖直车道线，并把断续虚线归并成一条线，可以跑：
-
-```bash
-python -m src.vertical_lane_pipeline \
-  --source datasets/local_colm/images/test \
-  --gt-xlsx 结果统计.xlsx \
-  --out runs/vertical_lane_predictions.json \
-  --counts-out runs/vertical_lane_counts.csv \
-  --metrics-out runs/vertical_lane_metrics.json \
-  --report-xlsx runs/vertical_lane_report.xlsx \
+py -3 -m src.vertical_lane_pipeline ^
+  --source datasets/local_colm/images/test ^
+  --gt-xlsx 结果统计.xlsx ^
+  --out runs/vertical_lane_predictions.json ^
+  --counts-out runs/vertical_lane_counts.csv ^
+  --metrics-out runs/vertical_lane_metrics.json ^
+  --report-xlsx runs/vertical_lane_report.xlsx ^
   --save-vis runs/vertical_lane_vis
 ```
 
-输出中白线用红色描出，黄线用蓝色描出。算法使用白/黄颜色阈值、Hough 线段检测、近竖直角度过滤，并按方向和横向距离把断续段聚合成整条车道线。
-
-注意：`结果统计.xlsx` 只有每张图的白线/黄线数量，没有逐条线坐标，所以报告里的“正确数”采用数量级口径 `min(检测数, GT数)`。如果要严格执行“偏离 15 度以内算准确”，需要每条 GT 线的端点或多边形标注。
-
-## 4. 数量级评估
+不用颜色模型：
 
 ```bash
-python -m src.evaluate_lane_metrics \
-  --pred predictions_row_anchor_constrained.json \
-  --gt-xlsx 结果统计.xlsx \
-  --count-only \
-  --out metrics_row_anchor_count_only.json
+py -3 -m src.vertical_lane_pipeline --no-color-model
 ```
 
-`结果统计.xlsx` 只有每张图白线/黄线数量，没有逐条线坐标，所以这里只能做数量级 Precision / Recall / F1，不能严格验证 15 度角度规则。
+## 针对当前误差的优化点
 
-## 5. 可选：训练 TinyUFLD row-grid 模型
+- 图中黄线被画成白线：颜色模型现在会对所有候选二次判断，不只过滤黄线，也会把白色候选纠正成黄线。
+- 图中多画线：黄线候选会经过颜色模型低置信过滤，并在后处理阶段做同类去重和数量上限约束。
+- 图中定位不贴合：候选段聚合后会输出 `curve_points`，可视化优先画二次曲线；直线端点仍保留在 JSON 中，便于数量统计。
 
-如果 row-anchor 响应跟踪可视化稳定，可以进一步把它生成的弱标签拿来训练 TinyUFLD 模型。
+## 输出文件
 
-生成弱标签：
+- `runs/vertical_lane_predictions.json`：逐图、逐线检测结果。
+- `runs/vertical_lane_counts.csv`：每张图检测到的白线/黄线数量。
+- `runs/vertical_lane_metrics.json`：总体指标和每图计数。
+- `runs/vertical_lane_report.xlsx`：可直接提交/查看的统计表。
+- `runs/vertical_lane_vis/`：可视化图片。
 
-```bash
-python -m src.generate_ufld_labels \
-  --image-dir datasets/local_colm/images/test \
-  --gt-xlsx 结果统计.xlsx \
-  --out-dir datasets/local_colm/ufld_labels/test \
-  --index-out datasets/local_colm/ufld_test_index.json
+## 评估说明
+
+`结果统计.xlsx` 只有每张图的白线/黄线数量，没有逐条线的端点或多边形标注。因此当前“正确数”只能按每图每类的数量口径计算：
+
+```text
+correct = min(pred_count, gt_count)
 ```
 
-训练：
+如果要严格执行“偏离 15 度以内算准确”，需要给每条 GT 车道线补充端点、多点折线或 mask 标注，然后用角度差、中心距离和 IoU 做逐条匹配。
 
-```bash
-python -m src.train_ufld \
-  --index datasets/local_colm/ufld_test_index.json \
-  --out models/ufld_tiny.pt \
-  --epochs 60 \
-  --batch 8 \
-  --device cuda:0
-```
+## 可继续提升的方向
 
-如果没有 GPU：
-
-```bash
-python -m src.train_ufld \
-  --index datasets/local_colm/ufld_test_index.json \
-  --out models/ufld_tiny.pt \
-  --epochs 60 \
-  --batch 4 \
-  --device cpu
-```
-
-模型输出两部分：
-
-- `grid_logits`：每个 lane slot、每个 row anchor 的横向 grid 分类。
-- `color_logits`：每个 lane slot 的颜色分类，白线 / 黄线 / none。
-
-训练中还加入了类似 UFLD 结构先验的平滑损失，使相邻 row 的预测位置不要剧烈跳变。
-
-TinyUFLD 推理：
-
-```bash
-python -m src.predict_ufld \
-  --weights models/ufld_tiny.pt \
-  --source datasets/local_colm/images/test \
-  --out predictions_ufld.json \
-  --counts-out prediction_counts_ufld.csv \
-  --save-vis runs/ufld_vis
-```
-
-## 6. 主要代码
-
-- `src/predict_row_anchor.py`：默认推荐，row-anchor 响应峰检测 + 跨行跟踪。
-- `src/row_anchor_detector.py`：核心 row-anchor 跟踪算法。
-- `src/generate_ufld_labels.py`：生成 row-anchor 弱标签。
-- `src/ufld_model.py`：TinyUFLD 模型，row-grid 分类 + 颜色头。
-- `src/train_ufld.py`：训练 UFLD-style 模型。
-- `src/predict_ufld.py`：推理并输出白线/黄线 JSON、CSV、可视化。
-- `src/classical_lane.py`：传统线候选生成，用来启动弱标签。
-- `src/evaluate_lane_metrics.py`：统计指标。
-
-## 7. 和论文的关系
-
-借鉴点：
-
-- 使用预定义 row anchors。
-- 把车道线位置预测改成横向 grid classification。
-- 使用全局图像特征一次性预测多条 lane。
-- 加入相邻 row 位置平滑的结构损失。
-
-和原论文不同：
-
-- 原论文在 TuSimple / CULane 这类有逐点 lane 标注的数据集上训练。
-- 本项目当前只有数量标注，因此默认先用 row-anchor 响应跟踪，避免弱标签训练不稳。
-- 本项目额外加了白/黄颜色头，以适配实验要求。
-
-参考：
-
-- GitHub: https://github.com/cfzd/Ultra-Fast-Lane-Detection
-- Paper: https://arxiv.org/abs/2004.11757
+- CV：增加消失点约束，过滤穿过车辆、箭头、斑马线的错误线段。
+- ML：用当前候选的 HSV/Lab/几何特征训练二分类或三分类模型，区分白线、黄线和非车道线。
+- 神经网络：用 UFLD、SCNN、LaneATT 或 CLRNet 一类 lane detector 做端到端车道线定位，再单独加颜色分类头。

@@ -35,6 +35,9 @@ class VerticalLaneParams:
     cluster_x_gap: float = 105.0
     min_group_segments: int = 1
     line_width: int = 14
+    color_override_threshold: float = 0.68
+    yellow_reject_threshold: float = 0.45
+    curve_samples: int = 80
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,7 +51,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-vis", default="runs/vertical_lane_vis")
     parser.add_argument("--max-width", type=int, default=960)
     parser.add_argument("--conf-thr", type=float, default=0.08)
-    parser.add_argument("--color-model", default=None, help="Path to learned color classifier .pkl (logistic regression).")
+    parser.add_argument(
+        "--color-model",
+        default="models/color_lr.pkl",
+        help="Path to learned color classifier .pkl. Existing default is used when present.",
+    )
+    parser.add_argument("--no-color-model", action="store_true", help="Disable learned color post-processing.")
     return parser.parse_args()
 
 
@@ -233,6 +241,7 @@ def group_to_prediction(
     endpoints = [[float(x * inv_scale), float(y * inv_scale)] for x, y in endpoints]
     bbox = [float(v * inv_scale) for v in bbox]
     row_points = [[float(x * inv_scale), float(y * inv_scale)] for x, y in points.tolist()]
+    curve_points = fit_curve_points(points, image_shape, scale, params)
     return {
         "class": cls,
         "conf": float(conf),
@@ -242,7 +251,37 @@ def group_to_prediction(
         "source_class": "vertical_color_hough_group",
         "segments": len(group),
         "row_points": row_points,
+        "curve_points": curve_points,
     }
+
+
+def fit_curve_points(
+    points: np.ndarray,
+    image_shape: tuple[int, int],
+    scale: float,
+    params: VerticalLaneParams,
+) -> list[list[float]]:
+    if len(points) < 4:
+        inv_scale = 1.0 / scale
+        return [[float(x * inv_scale), float(y * inv_scale)] for x, y in points.tolist()]
+    height, width = image_shape
+    pts = np.asarray(points, dtype=np.float32)
+    degree = 2 if len(points) >= 6 else 1
+    try:
+        coeff = np.polyfit(pts[:, 1], pts[:, 0], deg=degree)
+    except np.linalg.LinAlgError:
+        inv_scale = 1.0 / scale
+        return [[float(x * inv_scale), float(y * inv_scale)] for x, y in points.tolist()]
+
+    ys = np.linspace(float(pts[:, 1].min()), float(pts[:, 1].max()), params.curve_samples)
+    xs = np.polyval(coeff, ys)
+    inv_scale = 1.0 / scale
+    curve = []
+    for x, y in zip(xs, ys):
+        if not np.isfinite(x) or not np.isfinite(y):
+            continue
+        curve.append([float(np.clip(x, 0, width - 1) * inv_scale), float(np.clip(y, 0, height - 1) * inv_scale)])
+    return curve
 
 
 def suppress_duplicates(instances: list[dict[str, Any]], distance_thr: float = 42.0) -> list[dict[str, Any]]:
@@ -365,21 +404,25 @@ def detect_image(image_bgr: np.ndarray, params: VerticalLaneParams,
             if pred is not None:
                 instances.append(pred)
 
-    # Post-process: for YELLOW lines only, use LR model to suppress false positives.
-    # White lines are left untouched (HSV white precision is already 65%).
-    # Yellow suffers from road-surface false positives; LR provides a second opinion.
+    # Use learned color features as a second opinion. This both suppresses yellow
+    # false positives and fixes yellow markings initially found by the white mask.
     if color_model is not None:
         filtered = []
         for inst in instances:
             ep = inst["endpoints"]
-            fitted = np.array([ep[0][0], ep[0][1], ep[1][0], ep[1][1]], dtype=np.float32)
-            cls, wp, yp = _classify_with_model(fitted, small, color_model, params.line_width)
+            fitted = np.array(
+                [ep[0][0] * scale, ep[0][1] * scale, ep[1][0] * scale, ep[1][1] * scale],
+                dtype=np.float32,
+            )
+            model_cls, wp, yp = _classify_with_model(fitted, small, color_model, params.line_width)
             inst["white_score"] = float(wp)
             inst["yellow_score"] = float(yp)
-            inst["color_source"] = "logistic_regression_filter"
-            # For yellow detections: keep only if LR also says yellow (dual confirmation)
-            if inst["class"] == YELLOW and cls != YELLOW:
-                continue  # Drop — LR rejects this yellow
+            inst["color_source"] = "learned_color_classifier"
+            if inst["class"] == YELLOW and yp < params.yellow_reject_threshold:
+                continue
+            if max(wp, yp) >= params.color_override_threshold and model_cls != inst["class"]:
+                inst["class"] = model_cls
+                inst["source_class"] = "vertical_color_hough_group_color_corrected"
             filtered.append(inst)
         instances = filtered
 
@@ -392,9 +435,14 @@ def draw_predictions(image: np.ndarray, instances: list[dict[str, Any]], conf_th
         if float(inst.get("conf", 0.0)) < conf_thr:
             continue
         color = (0, 0, 255) if inst["class"] == WHITE else (255, 0, 0)
-        p1 = tuple(int(round(v)) for v in inst["endpoints"][0])
-        p2 = tuple(int(round(v)) for v in inst["endpoints"][1])
-        cv2.line(canvas, p1, p2, color, 7, cv2.LINE_AA)
+        curve = inst.get("curve_points") or []
+        if len(curve) >= 3:
+            pts = np.asarray(curve, dtype=np.int32).reshape(-1, 1, 2)
+            cv2.polylines(canvas, [pts], isClosed=False, color=color, thickness=7, lineType=cv2.LINE_AA)
+        else:
+            p1 = tuple(int(round(v)) for v in inst["endpoints"][0])
+            p2 = tuple(int(round(v)) for v in inst["endpoints"][1])
+            cv2.line(canvas, p1, p2, color, 7, cv2.LINE_AA)
     return canvas
 
 
@@ -560,7 +608,8 @@ def main() -> None:
     images: dict[str, dict[str, Any]] = {}
 
     color_model = None
-    if args.color_model:
+    color_model_path = Path(args.color_model) if args.color_model else None
+    if not args.no_color_model and color_model_path is not None and color_model_path.exists():
         color_model = _load_color_model(args.color_model)
         print(f"Loaded color model from {args.color_model}")
 
@@ -575,8 +624,9 @@ def main() -> None:
     output = {
         "meta": {
             "method": "vertical_color_hough_group",
-            "note": "White/yellow HSV/Lab masks + Hough line segments + near-vertical grouping for dashed lane markings.",
+            "note": "White/yellow HSV masks + Hough line segments + near-vertical grouping + optional learned color correction.",
             "visualization": "white_lane drawn in red, yellow_lane drawn in blue",
+            "color_model": str(color_model_path) if color_model is not None else None,
         },
         "images": images,
     }
