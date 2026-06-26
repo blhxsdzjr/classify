@@ -81,6 +81,25 @@ python -m src.predict_row_anchor \
 - `--max-match-distance`：跨 row 连接距离，线断开就调大，乱连就调小。
 - `--min-points`：一条线至少经过多少个 row，误检多就调大。
 
+## 3.1 竖直断续线 + 白黄统计脚本
+
+如果只需要按本次作业要求找竖直/近竖直车道线，并把断续虚线归并成一条线，可以跑：
+
+```bash
+python -m src.vertical_lane_pipeline \
+  --source datasets/local_colm/images/test \
+  --gt-xlsx 结果统计.xlsx \
+  --out runs/vertical_lane_predictions.json \
+  --counts-out runs/vertical_lane_counts.csv \
+  --metrics-out runs/vertical_lane_metrics.json \
+  --report-xlsx runs/vertical_lane_report.xlsx \
+  --save-vis runs/vertical_lane_vis
+```
+
+输出中白线用红色描出，黄线用蓝色描出。算法使用白/黄颜色阈值、Hough 线段检测、近竖直角度过滤，并按方向和横向距离把断续段聚合成整条车道线。
+
+注意：`结果统计.xlsx` 只有每张图的白线/黄线数量，没有逐条线坐标，所以报告里的“正确数”采用数量级口径 `min(检测数, GT数)`。如果要严格执行“偏离 15 度以内算准确”，需要每条 GT 线的端点或多边形标注。
+
 ## 4. 数量级评估
 
 ```bash
