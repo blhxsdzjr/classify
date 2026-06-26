@@ -304,9 +304,12 @@ def train(args):
     mask_dir = "datasets/local_colm/masks_v3"
     make_masks(args.image_dir, args.gt_dir, mask_dir)
 
-    # ── collect annotated stems ──
+    # ── collect annotated stems (only manually annotated 1-23) ──
     stems = sorted(p.name for p in Path(mask_dir).glob("*.png"))
     stems = [s.replace(".png", "") for s in stems]
+    # Filter: only keep images where GT label exists AND is manually annotated (1-23)
+    stems = [s for s in stems if Path(args.gt_dir, f"{s}.txt").exists()
+             and s.isdigit() and 1 <= int(s) <= 23]
     print(f"Total annotated images: {len(stems)}")
 
     # ── split: 18 train / 5 val (correct for 23 images) ──
@@ -315,6 +318,8 @@ def train(args):
     n_train = 18 if len(stems) >= 23 else max(1, int(len(stems) * 0.75))
     train_stems = stems[:n_train]
     val_stems = stems[n_train:]
+    # Save val stems for later evaluation
+    json.dump(sorted(val_stems), open("models/val_stems.json", "w"))
     print(f"Train: {len(train_stems)}, Val: {len(val_stems)}")
     print(f"Val images: {', '.join(sorted(val_stems))}")
 
@@ -395,36 +400,56 @@ def train(args):
 
 
 def search_thresholds(model, val_dl, out_path):
-    """Sweep white/yellow softmax thresholds on validation set."""
-    best_f1, best_thr = 0.0, (0.5, 0.5)
+    """Extended threshold sweep with detailed per-class metrics."""
     all_probs, all_masks = [], []
     model.eval()
     with torch.no_grad():
         for batch in val_dl:
             logits = model(batch["image"].to(DEVICE))
             probs = F.softmax(logits, dim=1).cpu().numpy()
-            masks = batch["mask"].numpy()
-            all_probs.append(probs); all_masks.append(masks)
+            all_probs.append(probs); all_masks.append(batch["mask"].numpy())
     all_probs = np.concatenate(all_probs, axis=0)
     all_masks = np.concatenate(all_masks, axis=0)
 
-    for w_thr in np.arange(0.3, 0.9, 0.05):
-        for y_thr in np.arange(0.3, 0.9, 0.05):
+    W_THRESHOLDS = [0.35, 0.45, 0.55, 0.65, 0.75]
+    Y_THRESHOLDS = [0.45, 0.50, 0.55, 0.60]
+
+    best_f1, best_thr = 0.0, (0.5, 0.5)
+    results = []
+
+    for w_thr in W_THRESHOLDS:
+        for y_thr in Y_THRESHOLDS:
+            row = {"w_thr": w_thr, "y_thr": y_thr}
             f1_sum = 0.0
-            for c, thr in [(1, w_thr), (2, y_thr)]:
+            for c, thr, name in [(1, w_thr, "white"), (2, y_thr, "yellow")]:
                 pc = (all_probs[:, c] >= thr)
                 tc = (all_masks == c)
                 inter = (pc & tc).sum()
                 prec = inter / max(pc.sum(), 1)
                 rec = inter / max(tc.sum(), 1)
-                f1_sum += 2 * prec * rec / max(prec + rec, 1e-6)
+                f1 = 2 * prec * rec / max(prec + rec, 1e-6)
+                row[f"{name}_P"] = round(prec, 4)
+                row[f"{name}_R"] = round(rec, 4)
+                row[f"{name}_F1"] = round(f1, 4)
+                row[f"{name}_pred_px"] = int(pc.sum())
+                f1_sum += f1
+            row["F1_sum"] = round(f1_sum, 4)
+            results.append(row)
             if f1_sum > best_f1:
                 best_f1 = f1_sum; best_thr = (w_thr, y_thr)
 
+    # Print table
+    print(f"\n{'w_thr':>6} {'y_thr':>6} {'w_P':>8} {'w_R':>8} {'w_F1':>8} {'y_P':>8} {'y_R':>8} {'y_F1':>8} {'F1_sum':>8}")
+    print("-" * 78)
+    for r in sorted(results, key=lambda x: -x["F1_sum"])[:15]:
+        print(f"{r['w_thr']:6.2f} {r['y_thr']:6.2f} {r['white_P']:8.4f} {r['white_R']:8.4f} "
+              f"{r['white_F1']:8.4f} {r['yellow_P']:8.4f} {r['yellow_R']:8.4f} "
+              f"{r['yellow_F1']:8.4f} {r['F1_sum']:8.4f}")
+
     result = {"white_threshold": best_thr[0], "yellow_threshold": best_thr[1],
-              "val_best_f1_sum": float(best_f1)}
+              "val_best_f1_sum": float(best_f1), "sweep": results}
     json.dump(result, open(out_path, "w"), indent=2)
-    print(f"Best thresholds: white={best_thr[0]:.2f}, yellow={best_thr[1]:.2f} (F1_sum={best_f1:.4f})")
+    print(f"\nBest: white={best_thr[0]:.2f}, yellow={best_thr[1]:.2f} (F1_sum={best_f1:.4f})")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -459,36 +484,46 @@ def predict_mask(model, image_bgr, thresholds=(0.5, 0.5)):
         logits = model(t)
     probs = F.softmax(logits, dim=1)[0].cpu().numpy()  # [3, H, W]
 
-    # Threshold each class (not argmax)
+    # Threshold each class
     w_thr, y_thr = thresholds
-    mask = np.zeros((IMG_H, IMG_W), dtype=np.uint8)
-    mask[(probs[1] >= w_thr) & (probs[1] > probs[2])] = 1
-    mask[(probs[2] >= y_thr) & (probs[2] > probs[1])] = 2
+    mask_small = np.zeros((IMG_H, IMG_W), dtype=np.uint8)
+    mask_small[(probs[1] >= w_thr) & (probs[1] > probs[2])] = 1
+    mask_small[(probs[2] >= y_thr) & (probs[2] > probs[1])] = 2
 
     # Resize back to original
     if new_w >= IMG_W:
         x0 = (new_w - IMG_W) // 2
         mask_full = np.zeros((IMG_H, new_w), dtype=np.uint8)
-        mask_full[:, x0:x0 + IMG_W] = mask
+        mask_full[:, x0:x0 + IMG_W] = mask_small
+        probs_full = np.zeros((3, IMG_H, new_w), dtype=np.float32)
+        probs_full[:, :, x0:x0 + IMG_W] = probs[:, :IMG_H, :IMG_W]
     else:
-        mask_full = mask[:, :new_w]
+        mask_full = mask_small[:, :new_w]
+        probs_full = probs[:, :, :new_w]
     # Reverse scale
     mask_orig = cv2.resize(mask_full, (w, h), interpolation=cv2.INTER_NEAREST)
-    return mask_orig
+    probs_orig = np.stack([
+        cv2.resize(probs_full[c], (w, h), interpolation=cv2.INTER_LINEAR)
+        for c in range(3)], axis=0)
+    return mask_orig, probs_orig
 
 
-def mask_to_lines(mask, min_area=80, min_length=50, max_aspect=8.0):
-    """Extract lanes via connected components + strict filtering + fitLine."""
+def mask_to_lines(mask, probs=None, min_area=60, min_height=20,
+                  min_length=40, min_elongation=1.8, roi_y_ratio=0.30):
+    """Enhanced post-processing: CC filtering + morphology + merging + ROI."""
+    H, W_img = mask.shape
     results = []
+
     for cls_id, cls_name in [(1, "white_lane"), (2, "yellow_lane")]:
         binary = (mask == cls_id).astype(np.uint8)
         if binary.sum() < 20:
             continue
 
-        # Morph cleanup
-        k = np.ones((3, 3), np.uint8)
-        binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, k)
-        binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, k)
+        # Morphology: light close to connect dashes, open to remove noise
+        kernel_close = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 11))
+        binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel_close)
+        kernel_open = np.ones((3, 3), np.uint8)
+        binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel_open)
 
         n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
             binary, connectivity=8)
@@ -498,13 +533,25 @@ def mask_to_lines(mask, min_area=80, min_length=50, max_aspect=8.0):
             area = stats[i, cv2.CC_STAT_AREA]
             if area < min_area:
                 continue
-            w_cc = stats[i, cv2.CC_STAT_WIDTH]
             h_cc = stats[i, cv2.CC_STAT_HEIGHT]
-            aspect = max(w_cc, h_cc) / max(min(w_cc, h_cc), 1)
-            if aspect > max_aspect and area < 500:
-                continue  # likely noise, not a lane line
+            w_cc = stats[i, cv2.CC_STAT_WIDTH]
+            if h_cc < min_height:
+                continue
+            elongation = max(h_cc, w_cc) / max(min(h_cc, w_cc), 1)
+            if elongation < min_elongation:
+                continue
 
-            ys, xs = np.where(labels == i)
+            # Mean probability of this component
+            comp_mask = (labels == i)
+            if probs is not None:
+                mean_prob = float(probs[cls_id][comp_mask].mean())
+                # Require mean prob to be decent
+                if mean_prob < 0.35:
+                    continue
+            else:
+                mean_prob = 0.5
+
+            ys, xs = np.where(comp_mask)
             if len(xs) < 10:
                 continue
             pts = np.column_stack([xs.astype(np.float32), ys.astype(np.float32)])
@@ -516,32 +563,67 @@ def mask_to_lines(mask, min_area=80, min_length=50, max_aspect=8.0):
                                 endpoints[1][1] - endpoints[0][1])
             if length < min_length:
                 continue
+
             components.append({
                 "class": cls_name,
-                "conf": min(1.0, area / 800.0),
+                "conf": min(1.0, mean_prob),
                 "angle_deg": float(angle),
                 "endpoints": endpoints,
                 "bbox": [float(v) for v in bbox],
                 "area": int(area),
                 "length": float(length),
+                "h_cc": int(h_cc),
+                "mean_prob": float(mean_prob),
             })
 
-        # Dedup: merge lines with similar x-center and angle
+        # Sort by length descending
         components.sort(key=lambda x: -x["length"])
-        kept = []
-        for c in components:
-            cx = (c["bbox"][0] + c["bbox"][2]) / 2
-            dup = False
-            for k in kept:
-                kx = (k["bbox"][0] + k["bbox"][2]) / 2
-                if abs(cx - kx) < 35:
-                    ad = abs(c["angle_deg"] - k["angle_deg"]) % 180.0
-                    if min(ad, 180 - ad) < 15:
-                        dup = True; break
-            if not dup:
-                kept.append(c)
 
-        results.extend(kept)
+        # --- Merge nearby colinear lines ---
+        merged = []
+        used = [False] * len(components)
+        for i, ci in enumerate(components):
+            if used[i]:
+                continue
+            group = [ci]
+            used[i] = True
+            cxi = (ci["bbox"][0] + ci["bbox"][2]) / 2
+            for j, cj in enumerate(components):
+                if used[j]:
+                    continue
+                cxj = (cj["bbox"][0] + cj["bbox"][2]) / 2
+                ang_diff = abs(ci["angle_deg"] - cj["angle_deg"]) % 180.0
+                ang_diff = min(ang_diff, 180.0 - ang_diff)
+                if ang_diff <= 10.0 and abs(cxi - cxj) <= 40.0:
+                    used[j] = True
+                    group.append(cj)
+
+            if len(group) == 1:
+                merged.append(ci)
+            else:
+                # Merge: take the longer coverage
+                all_pts = []
+                for c in group:
+                    all_pts.extend(c["endpoints"])
+                xs_g = [p[0] for p in all_pts]; ys_g = [p[1] for p in all_pts]
+                pts_g = np.column_stack([np.array(xs_g, dtype=np.float32),
+                                         np.array(ys_g, dtype=np.float32)])
+                fitted = fit_line_from_points(pts_g)
+                if fitted is not None:
+                    ang, ep, bb = fitted
+                    length_g = math.hypot(ep[1][0] - ep[0][0], ep[1][1] - ep[0][1])
+                    ci["angle_deg"] = float(ang)
+                    ci["endpoints"] = ep
+                    ci["bbox"] = [float(v) for v in bb]
+                    ci["length"] = float(length_g)
+                    ci["conf"] = max(c["conf"] for c in group)
+                merged.append(ci)
+
+        # --- ROI filter: keep only lower portion of image ---
+        for c in merged:
+            y_top = min(c["endpoints"][0][1], c["endpoints"][1][1])
+            if y_top >= roi_y_ratio * H:
+                results.append(c)
 
     return results
 
@@ -552,8 +634,8 @@ def predict_all(model, image_dir, out_path, vis_dir=None, thresholds=(0.5, 0.5))
         img = cv2.imread(str(img_path))
         if img is None:
             continue
-        mask = predict_mask(model, img, thresholds)
-        lines = mask_to_lines(mask)
+        mask, probs = predict_mask(model, img, thresholds)
+        lines = mask_to_lines(mask, probs)
         results[img_path.name] = {
             "width": img.shape[1], "height": img.shape[0],
             "instances": lines,
@@ -576,85 +658,76 @@ def predict_all(model, image_dir, out_path, vis_dir=None, thresholds=(0.5, 0.5))
 # ═══════════════════════════════════════════════════════════════
 # 7.  Evaluation
 # ═══════════════════════════════════════════════════════════════
-def evaluate_lines(pred_path, gt_dir, image_dir, angle_thresholds=(15, 25, 35)):
-    """Line-level evaluation at multiple angle thresholds with relaxed spatial matching."""
+def evaluate_lines(pred_path, gt_dir, image_dir, val_stems=None, angle_thresholds=(15, 25, 35)):
+    """Line-level evaluation with separate val-only and all-23 reporting."""
     pred = json.load(open(pred_path))
     gt_dir, img_dir = Path(gt_dir), Path(image_dir)
 
-    results = {}
-    for angle_thr in angle_thresholds:
-        counts = {"white_lane": [0, 0, 0], "yellow_lane": [0, 0, 0]}  # det, gt, correct
+    def _eval_subset(stem_filter_label, stem_filter_fn):
+        results = {}
+        for angle_thr in angle_thresholds:
+            counts = {"white_lane": [0, 0, 0], "yellow_lane": [0, 0, 0]}
+            for img_name, payload in pred["images"].items():
+                stem = Path(img_name).stem
+                if not stem_filter_fn(stem):
+                    continue
+                preds = payload.get("instances", [])
+                img = cv2.imread(str(img_dir / img_name))
+                if img is None: continue
+                h, w = img.shape[:2]
+                gts = []
+                gt_path = gt_dir / f"{stem}.txt"
+                if gt_path.exists():
+                    for line in gt_path.read_text().strip().splitlines():
+                        parts = line.strip().split()
+                        if not parts: continue
+                        cls_id = int(float(parts[0]))
+                        coords = [float(x) for x in parts[1:]]
+                        pts = [(int(coords[i]*w), int(coords[i+1]*h)) for i in range(0, len(coords), 2)]
+                        if len(pts) >= 2:
+                            xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
+                            gts.append({"class": "white_lane" if cls_id == 0 else "yellow_lane",
+                                        "bbox": [min(xs), min(ys), max(xs), max(ys)],
+                                        "angle": math.degrees(math.atan2(pts[-1][1]-pts[0][1], pts[-1][0]-pts[0][0])) % 180.0})
+                for gt in gts: counts[gt["class"]][1] += 1
+                for p in preds:
+                    if p["class"] in counts: counts[p["class"]][0] += 1
+                used_gt = set()
+                for p in sorted(preds, key=lambda x: x.get("conf", 0.0), reverse=True):
+                    p_bbox = p.get("bbox", [0,0,0,0]); p_ang = p.get("angle_deg", 0.0)
+                    best = None
+                    for gi, gt in enumerate(gts):
+                        if gi in used_gt or p["class"] != gt["class"]: continue
+                        ad = min(abs((p_ang - gt["angle"]) % 180.0), 180.0 - abs((p_ang - gt["angle"]) % 180.0))
+                        if ad > angle_thr: continue
+                        iou = _bbox_iou(p_bbox, gt["bbox"]); dist = _bbox_dist(p_bbox, gt["bbox"])
+                        if iou > 0.05 or dist < 120:
+                            if best is None or iou > best[0]: best = (iou, gi)
+                    if best is not None: used_gt.add(best[1]); counts[p["class"]][2] += 1
+            metrics = {}
+            for cls in ("white_lane", "yellow_lane"):
+                d,g,c = counts[cls]; p=c/d if d else 0; r=c/g if g else 0
+                f1=2*p*r/(p+r) if p+r else 0; metrics[cls]=(p,r,f1,d,c,g)
+            td=sum(counts[c][0] for c in ("white_lane","yellow_lane"))
+            tc=sum(counts[c][2] for c in ("white_lane","yellow_lane"))
+            tg=sum(counts[c][1] for c in ("white_lane","yellow_lane"))
+            op=tc/td if td else 0; orec=tc/tg if tg else 0
+            of1=2*op*orec/(op+orec) if op+orec else 0
+            metrics["overall"]=(op,orec,of1,td,tc,tg)
+            results[angle_thr]=metrics
+        return results
 
-        for img_name, payload in pred["images"].items():
-            stem = Path(img_name).stem
-            if not stem.isdigit() or int(stem) > 23:
-                continue
-            preds = payload.get("instances", [])
-            img = cv2.imread(str(img_dir / img_name))
-            if img is None:
-                continue
-            h, w = img.shape[:2]
-            gts = []
-            gt_path = gt_dir / f"{stem}.txt"
-            if gt_path.exists():
-                for line in gt_path.read_text().strip().splitlines():
-                    parts = line.strip().split()
-                    if not parts: continue
-                    cls_id = int(float(parts[0]))
-                    coords = [float(x) for x in parts[1:]]
-                    pts = [(int(coords[i]*w), int(coords[i+1]*h))
-                           for i in range(0, len(coords), 2)]
-                    if len(pts) >= 2:
-                        xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
-                        gts.append({
-                            "class": "white_lane" if cls_id == 0 else "yellow_lane",
-                            "bbox": [min(xs), min(ys), max(xs), max(ys)],
-                            "angle": math.degrees(math.atan2(
-                                pts[-1][1]-pts[0][1], pts[-1][0]-pts[0][0])) % 180.0,
-                        })
+    # Eval on val set only (5 images)
+    if val_stems:
+        val_set = set(val_stems)
+        val_results = _eval_subset("val (5 images)", lambda s: s in val_set)
+    else:
+        val_results = None
 
-            for gt in gts:
-                counts[gt["class"]][1] += 1  # GT count
-            for p in preds:
-                if p["class"] in counts:
-                    counts[p["class"]][0] += 1  # detected
+    # Eval on all 23 annotated
+    all_results = _eval_subset("all 23 annotated", lambda s: s.isdigit() and int(s) <= 23)
 
-            # Greedy matching
-            used_gt = set()
-            for p in sorted(preds, key=lambda x: x.get("conf", 0.0), reverse=True):
-                p_bbox = p.get("bbox", [0, 0, 0, 0])
-                p_ang = p.get("angle_deg", 0.0)
-                best = None
-                for gi, gt in enumerate(gts):
-                    if gi in used_gt or p["class"] != gt["class"]: continue
-                    ang_diff = min(abs((p_ang - gt["angle"]) % 180.0),
-                                   180.0 - abs((p_ang - gt["angle"]) % 180.0))
-                    if ang_diff > angle_thr: continue
-                    iou = _bbox_iou(p_bbox, gt["bbox"])
-                    dist = _bbox_dist(p_bbox, gt["bbox"])
-                    if iou > 0.05 or dist < 120:
-                        if best is None or iou > best[0]:
-                            best = (iou, gi)
-                if best is not None:
-                    used_gt.add(best[1])
-                    counts[p["class"]][2] += 1
-
-        # Compute metrics
-        metrics = {}
-        for cls in ("white_lane", "yellow_lane"):
-            d, g, c = counts[cls]
-            p = c / d if d else 0; r = c / g if g else 0
-            f1 = 2 * p * r / (p + r) if p + r else 0
-            metrics[cls] = (p, r, f1, d, c, g)
-        td = sum(counts[c][0] for c in ("white_lane", "yellow_lane"))
-        tc = sum(counts[c][2] for c in ("white_lane", "yellow_lane"))
-        tg = sum(counts[c][1] for c in ("white_lane", "yellow_lane"))
-        op = tc / td if td else 0; or_ = tc / tg if tg else 0
-        of1 = 2 * op * or_ / (op + or_) if op + or_ else 0
-        metrics["overall"] = (op, or_, of1, td, tc, tg)
-        results[angle_thr] = metrics
-
-    return results
+    return all_results, val_results
 
 
 def _bbox_iou(a, b):
@@ -696,6 +769,7 @@ def parse_args():
     ev.add_argument("--pred", default="runs/unet_v3_predictions.json")
     ev.add_argument("--gt-dir", default="datasets/local_colm/labels/test")
     ev.add_argument("--image-dir", default="datasets/local_colm/images/test")
+    ev.add_argument("--val-stems", default="models/val_stems.json")
 
     return p.parse_args()
 
@@ -722,16 +796,31 @@ def main():
             print(f"Using thresholds from search: white={thresholds[0]:.2f}, yellow={thresholds[1]:.2f}")
         predict_all(model, args.source, args.out, args.save_vis, thresholds)
     elif args.cmd == "evaluate":
-        metrics = evaluate_lines(args.pred, args.gt_dir, args.image_dir)
-        print()
-        for angle_thr in (15, 25, 35):
-            m = metrics[angle_thr]
-            print(f"=== Angle ≤ {angle_thr}° ===")
-            print(f"{'Class':15s} {'Det':>6} {'Cor':>6} {'GT':>5} {'P':>8} {'R':>8} {'F1':>8}")
-            for cls in ("white_lane", "yellow_lane", "overall"):
-                p, r, f1, d, c, g = m[cls]
-                print(f"{cls:15s} {d:6} {c:6} {g:5} {p:8.4f} {r:8.4f} {f1:8.4f}")
-            print()
+        val_stems = None
+        if Path(args.val_stems).exists():
+            val_stems = set(json.load(open(args.val_stems)))
+
+        all_metrics, val_metrics = evaluate_lines(
+            args.pred, args.gt_dir, args.image_dir, val_stems)
+
+        def print_table(m, title):
+            print(f"\n{'='*70}")
+            print(f"  {title}")
+            print(f"{'='*70}")
+            for angle_thr in (15, 25, 35):
+                if angle_thr not in m: continue
+                r = m[angle_thr]
+                print(f"\n  Angle ≤ {angle_thr}°:")
+                print(f"  {'Class':14s} {'Det':>6} {'Cor':>6} {'GT':>5} {'P':>8} {'R':>8} {'F1':>8}")
+                print(f"  {'-'*60}")
+                for cls in ("white_lane", "yellow_lane", "overall"):
+                    p, rc, f1, d, c, g = r[cls]
+                    print(f"  {cls:14s} {d:6} {c:6} {g:5} {p:8.4f} {rc:8.4f} {f1:8.4f}")
+
+        if val_metrics:
+            n_val = len(val_stems) if val_stems else 0
+            print_table(val_metrics, f"Validation Set ({n_val} images)")
+        print_table(all_metrics, "All 23 Annotated Images (for error analysis only)")
     else:
         print("Usage: python -m src.unet_lane train|predict|evaluate")
 
