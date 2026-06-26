@@ -462,25 +462,35 @@ def write_counts_csv(images: dict[str, dict[str, Any]], path: Path) -> None:
             writer.writerow([filename, white + yellow, white, yellow])
 
 
-def draw_predictions(image_bgr: np.ndarray, instances: list[dict[str, Any]]) -> np.ndarray:
+def draw_predictions(
+    image_bgr: np.ndarray,
+    instances: list[dict[str, Any]],
+    *,
+    clean: bool = True,
+    line_color: tuple[int, int, int] = (255, 170, 0),
+    line_thickness: int = 6,
+) -> np.ndarray:
     import cv2
 
     vis = image_bgr.copy()
     for inst in instances:
         cls = normalize_class_name(inst.get("class", UNKNOWN))
-        color = (0, 220, 255) if cls == YELLOW else (245, 245, 245)
-        if "row_points" in inst and len(inst["row_points"]) >= 2:
-            pts = np.asarray(inst["row_points"], dtype=np.int32).reshape(-1, 1, 2)
-            cv2.polylines(vis, [pts], isClosed=False, color=color, thickness=4, lineType=cv2.LINE_AA)
-            for pt in pts[:, 0, :]:
-                cv2.circle(vis, tuple(int(v) for v in pt), 3, color, -1, cv2.LINE_AA)
+        color = line_color if clean else ((0, 220, 255) if cls == YELLOW else (245, 245, 245))
+        poly_points = inst.get("curve_points") or inst.get("row_points")
+        if poly_points is not None and len(poly_points) >= 2:
+            pts = np.asarray(poly_points, dtype=np.int32).reshape(-1, 1, 2)
+            cv2.polylines(vis, [pts], isClosed=False, color=color, thickness=line_thickness, lineType=cv2.LINE_AA)
+            if not clean:
+                for pt in pts[:, 0, :]:
+                    cv2.circle(vis, tuple(int(v) for v in pt), 3, color, -1, cv2.LINE_AA)
             x1, y1 = pts[:, 0, :].min(axis=0)
             x2, y2 = pts[:, 0, :].max(axis=0)
         else:
             p1 = tuple(int(round(v)) for v in inst["endpoints"][0])
             p2 = tuple(int(round(v)) for v in inst["endpoints"][1])
-            cv2.line(vis, p1, p2, color, 3, cv2.LINE_AA)
+            cv2.line(vis, p1, p2, color, line_thickness, cv2.LINE_AA)
             x1, y1, x2, y2 = [int(round(v)) for v in inst["bbox"]]
-        label = f"{cls} {float(inst.get('conf', 0.0)):.2f}"
-        cv2.putText(vis, label, (x1, max(18, y1 - 5)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+        if not clean:
+            label = f"{cls} {float(inst.get('conf', 0.0)):.2f}"
+            cv2.putText(vis, label, (x1, max(18, y1 - 5)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
     return vis

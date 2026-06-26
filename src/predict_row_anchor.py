@@ -25,6 +25,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--peak-rel-threshold", type=float, default=0.32)
     parser.add_argument("--max-match-distance", type=float, default=80.0)
     parser.add_argument("--min-points", type=int, default=5)
+    parser.add_argument("--debug-vis", action="store_true", help="Draw labels/points instead of clean blue curves.")
+    parser.add_argument("--line-thickness", type=int, default=6)
     return parser.parse_args()
 
 
@@ -69,7 +71,10 @@ def main() -> None:
             "instances": instances,
         }
         if vis_dir:
-            cv2.imwrite(str(vis_dir / image_path.name), draw_predictions(image, instances))
+            cv2.imwrite(
+                str(vis_dir / image_path.name),
+                draw_predictions(image, instances, clean=not args.debug_vis, line_thickness=args.line_thickness),
+            )
 
     output = {
         "meta": {

@@ -61,6 +61,8 @@ python -m src.predict_row_anchor \
   --save-vis runs/row_anchor_vis
 ```
 
+默认可视化会画成干净的蓝色平滑曲线，接近手工标线效果；如果想调试每个 row anchor 的点和文字标签，可以加 `--debug-vis`。
+
 如果允许使用 `结果统计.xlsx` 的每图白/黄数量做后处理约束：
 
 ```bash

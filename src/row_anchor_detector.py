@@ -26,6 +26,8 @@ class RowAnchorParams:
     max_missed_rows: int = 4
     min_points: int = 5
     min_vertical_span_ratio: float = 0.16
+    curve_degree: int = 2
+    curve_samples: int = 80
 
 
 @dataclass
@@ -224,7 +226,8 @@ def track_to_prediction(track: RowTrack, image_shape: tuple[int, int], source: s
     points = sorted(track.points, key=lambda pt: pt[1])
     if len(points) < 2:
         return None
-    fitted = fit_line_from_points(np.asarray(points, dtype=np.float32))
+    curve_points = smooth_curve_points(points, image_shape, RowAnchorParams())
+    fitted = fit_line_from_points(np.asarray(curve_points if curve_points else points, dtype=np.float32))
     if fitted is None:
         return None
     angle, endpoints, bbox = fitted
@@ -241,7 +244,33 @@ def track_to_prediction(track: RowTrack, image_shape: tuple[int, int], source: s
         "white_score": float(track.white_score / color_total),
         "yellow_score": float(track.yellow_score / color_total),
         "row_points": points,
+        "curve_points": curve_points,
     }
+
+
+def smooth_curve_points(
+    points: list[list[float]],
+    image_shape: tuple[int, int],
+    params: RowAnchorParams,
+) -> list[list[float]]:
+    if len(points) < 3:
+        return points
+    height, width = image_shape
+    pts = np.asarray(sorted(points, key=lambda pt: pt[1]), dtype=np.float32)
+    degree = min(params.curve_degree, len(pts) - 1)
+    try:
+        coeff = np.polyfit(pts[:, 1], pts[:, 0], deg=degree)
+    except np.linalg.LinAlgError:
+        return points
+    y_min, y_max = float(pts[:, 1].min()), float(pts[:, 1].max())
+    ys = np.linspace(y_min, y_max, max(params.curve_samples, len(points)))
+    xs = np.polyval(coeff, ys)
+    curve = []
+    for x, y in zip(xs, ys):
+        if not np.isfinite(x) or not np.isfinite(y):
+            continue
+        curve.append([float(np.clip(x, 0, width - 1)), float(np.clip(y, 0, height - 1))])
+    return curve if len(curve) >= 2 else points
 
 
 def filter_tracks(tracks: list[RowTrack], image_shape: tuple[int, int], params: RowAnchorParams) -> list[RowTrack]:
