@@ -89,12 +89,10 @@ def roi_mask(shape: tuple[int, int], top_ratio: float) -> np.ndarray:
 def color_masks(image_bgr: np.ndarray, params: VerticalLaneParams) -> dict[str, np.ndarray]:
     hsv = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
     h, s, v = cv2.split(hsv)
-    # Relaxed thresholds calibrated from GT analysis:
-    #   White GT: median V=149, S=57 — only 46% pass strict V>=145
-    #   Yellow GT: median S=42 — only 40% pass strict S>=70
-    # Strategy: catch more true lanes, then filter false positives geometrically + with MLP.
-    white = ((s <= 100) & (v >= 105)).astype(np.uint8) * 255
-    yellow = ((h >= 12) & (h <= 44) & (s >= 25) & (v >= 105)).astype(np.uint8) * 255
+    # Ultra-relaxed to catch fading/shadowed/weak lane markings.
+    # Noise will be filtered by geometry + 3-class MLP downstream.
+    white = ((s <= 115) & (v >= 85)).astype(np.uint8) * 255
+    yellow = ((h >= 10) & (h <= 48) & (s >= 18) & (v >= 85)).astype(np.uint8) * 255
 
     road_roi = roi_mask(image_bgr.shape[:2], params.roi_top_ratio)
     kernel = np.ones((3, 3), np.uint8)
